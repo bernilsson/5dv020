@@ -1,2 +1,6 @@
 project/
 target/
+*.aux
+*.log
+*.out
+*.pdf
