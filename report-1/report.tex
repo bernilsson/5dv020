@@ -13,7 +13,8 @@
 
 \usepackage[bookmarksnumbered, unicode, pdftex]{hyperref}
 
-\author{Bertil Nilsson, \texttt{<id09bnn@cs.umu.se>}\\Mikhail Glushenkov, \texttt{<c05mgv@cs.umu.se>}}
+\author{Mikhail Glushenkov, \texttt{<c05mgv@cs.umu.se>}\\
+        Bertil Nilsson, \texttt{<id09bnn@cs.umu.se>}}
 
 \title{Assignment 2 -- GCom Middleware:\\Analysis and Design}
 
@@ -24,7 +25,7 @@
 \pdfbookmark[1]{Front page}{beg}
 
 \begin{titlingpage}
-  \begin{minipage}[t]{0.4\textwidth}
+  \begin{minipage}[t]{0.45\textwidth}
   \begin{flushleft}
   \texttt{5DV020 - Distributed Systems, Autumn 12}
   \end{flushleft}
@@ -68,15 +69,123 @@
 \setcounter{section}{-1}
 
 \section{Introduction}
-TODO
+
+The purpose of this assignment is to design and implement GCom, a middleware for
+group communication. \ldots
 
 \section{Requirements Specification}
-TODO
+
+The system will implement the L2 specification (dynamic groups).
+
+Communication module:
+\begin{itemize}
+\item Basic non-reliable multicast
+\item Basic reliable multicast
+\end{itemize}
+
+Message ordering module:
+\begin{itemize}
+\item Non-ordered
+\item FIFO
+\item Causal
+\item Total
+\item Causal-Total
+\end{itemize}
+
+Group management module:
+\begin{itemize}
+\item Create and remove groups
+\item Add and remove group members
+\item Monitoring of live processes
+\item Notification about changes in group membership (incl. crashed nodes)
+\item Group names resolution: a mapping group name $\rightarrow$ group members.
+\end{itemize}
+
+Test program:
+\begin{itemize}
+\item A simple distributed GUI chat program. Each chat client instance is a node
+  of the distributed system.
+\end{itemize}
+
+Debug application:
+\begin{itemize}
+\item A malicious client for the aforementioned chat system.
+\item Simulates packet loss (send a message to a part of the group).
+\item Simulates packet rearrangement (send several messages in random order to
+  different nodes).
+\item Allows to choose message ordering.
+\item Allows to view the internal state.
+\item Allows to view a message's path.
+\item Provides a measure of system performance.
+\end{itemize}
 
 \section{Design}
-TODO
+
+We decided to implement our system in Scala and use Java RMI (?) for
+communication between processes. The choice of Scala was motivated by the desire
+to use a language that is more modern and convenient than Java, but still allows
+to run on JVM. The choice (?) of Java RMI over other alternatives was motivated
+by \ldots (other alternatives: Twitter Finagle, ZeroMQ, \ldots)
+
+Design of the communication module: simple, just use the reliable multicast
+algorithm from the textbook.
+
+Design of the message ordering module:
+\begin{itemize}
+\item FIFO: timestamps
+\item Causal: vector clocks
+\item Total: sequencer node chosen with an election alfgorithm
+\item Causal-Total: combination of causal and total
+\end{itemize}
+
+Design of the group management module:
+\begin{itemize}
+\item A node is identified by a (host, port) pair (or (host, name) for RMI).
+\item A group is identified by a group name.
+\item Group names are globally unique.
+\item Each node knows all group names, but not members
+\item Each node knows a distinguished group node for each group
+\item Distinguished node resolves group name to the list of group members
+\item If a distinguished node dies, a new distinguished node is elected and
+  everyone is notified
+\item Join a group: get a list of group members, broadcast a notification to
+  group members.
+\item Leave a group: broadcast a notification.
+\item If a node notices that one of its peers has died: broadcast a notification
+  to the members of all groups it belonged to.
+\end{itemize}
+
 
 \section{Time Plan}
-TODO
+
+\begin{tabular}{|l|p{10cm}|}
+\hline
+Week 49 & Implement the communication module. Start working on the GUI test programs. \\
+\hline
+Week 50 & Implement the message ordering module. \\
+\hline
+Week 51 & Implement the group management module. \\
+\hline
+Week 52 & Testing and bugfixing. Start writing the final report. \\
+\hline
+Week 1  & More testing and bugfixing. Time for any unforeseen delays. \\
+\hline
+Week 2  & Practical demonstration. Turn in the final report. \\
+\hline
+\end{tabular}
+
+\begin{thebibliography}{9}
+
+\bibitem{Textbook} \emph{Distributed Systems}\\
+\newblock George Coulouris, Jean Dollimore, Tim Kindberg and Gordon Blair\\
+\newblock Addison-Wesley, 2011\\
+
+\bibitem{Birman} \emph{Guide to Reliable Distributed Systems -- Building
+    High-Assurance Applications and Cloud-Hosted Services}\\
+\newblock Kenneth Birman\\
+\newblock Springer, 2012\\
+
+\end{thebibliography}
+
 
 \end{document}
