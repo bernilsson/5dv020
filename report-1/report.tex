@@ -139,33 +139,29 @@ assignment specification) and we felt that other communication libraries that we
 looked at either didn't provide any benefit for our use case (Finagle) or did
 all the required work for us (ZeroMQ).
 
-Design of the communication module: simple, just use the reliable multicast
-algorithm from the textbook.
+The communication module is just a straightforward implementation of the
+textbook algorithms for reliable and unreliable multicast\cite{Textbook}. The
+same can be said about the message ordering module: FIFO ordering will be
+implemented with logical timestamps, vector clocks will be used for the causal
+ordering, total ordering will be implemented with a sequencer node (specified as
+one of the inputs to the send function), and causal-total is just a combination
+of causal and total.
 
-Design of the message ordering module:
-\begin{itemize}
-\item FIFO: timestamps
-\item Causal: vector clocks
-\item Total: sequencer node chosen with an election alfgorithm
-\item Causal-Total: combination of causal and total
-\end{itemize}
+The group management module has a slightly more complicated design. Each node is
+identified by a (host, port number, name) triple. A group is identified by its
+name; names are globally unique, which is enforced by a central server that also
+associates an address of a coordinator node with each group name. The central
+server serves a hub through each new nodes can discover and join existing
+groups.
 
-Design of the group management module:
-\begin{itemize}
-\item A node is identified by a (host, port) pair (or (host, name) for RMI).
-\item A group is identified by a group name.
-\item Group names are globally unique.
-\item Each node knows all group names, but not members
-\item Each node knows a distinguished group node for each group
-\item Distinguished node resolves group name to the list of group members
-\item If a distinguished node dies, a new distinguished node is elected and
-  everyone is notified
-\item Join a group: get a list of group members, broadcast a notification to
-  group members.
-\item Leave a group: broadcast a notification.
-\item If a node notices that one of its peers has died: broadcast a notification
-  to the members of all groups it belonged to.
-\end{itemize}
+The coordinator node in each group serves as a message sequencer and gateway
+through which new nodes join the group. If the coordinator node dies or leaves
+the group, a new coordinator is elected, and all group members and the central
+server are notified. The Paxos algorithm\cite{Paxos} is used to ensure that all
+nodes have a consistent view of group membership, group coordinator and the
+value of the total ordering counter.
+
+TODO: some words on partitioning, scalability and limitations.
 
 
 \section{Time Plan}
