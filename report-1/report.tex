@@ -71,61 +71,73 @@
 \section{Introduction}
 
 The purpose of this assignment is to design and implement GCom, a middleware for
-group communication. \ldots
+group communication. Middleware is a software layer that provides a high-level
+interface to some functionality and frees the user from worrying about how said
+functionality is implemented. Group communication is a mode of communication
+that allows a set of nodes distributed over network to form groups and broadcast
+messages to all members of the groups they belong to.
+
+This is the first report, written at the planning stage of the project. It
+contains a requirements specification, a description of the design and a time
+plan.
 
 \section{Requirements Specification}
 
-The system will implement the L2 specification (dynamic groups).
+This assignment is divided into three levels - the obligatory basic level and
+two bonus levels that give additional points. In addition to the basic level,
+our solution will also implement the first bonus level (dynamic groups).
 
-Communication module:
-\begin{itemize}
-\item Basic non-reliable multicast
-\item Basic reliable multicast
-\end{itemize}
+The GCom middleware consists of three logical modules: communication, message
+ordering and group management. Additionally, we are required to implement a test
+application for showcasing the features of the GCom middleware and a debug
+application for demonstrating that it works correctly.
 
-Message ordering module:
-\begin{itemize}
-\item Non-ordered
-\item FIFO
-\item Causal
-\item Total
-\item Causal-Total
-\end{itemize}
+The communication module supports two operations: basic non-reliable multicast
+and basic reliable multicast. The type of multicast and the message type are set
+at module initialisation time, so only a single send operation is accessible at
+runtime. This operation takes a set of nodes and a message as input, and blocks
+until the operation has completed. The communication module also allows to
+register callbacks for acting upon a message delivired to the current node.
 
-Group management module:
-\begin{itemize}
-\item Create and remove groups
-\item Add and remove group members
-\item Monitoring of live processes
-\item Notification about changes in group membership (incl. crashed nodes)
-\item Group names resolution: a mapping group name $\rightarrow$ group members.
-\end{itemize}
+The message ordering module is built on top of the communication module. It
+allows to deliver messages according to several different orderings. The
+following orderings must be supported: non-ordered, FIFO, causal, total and
+causal-total (described in more detail in the assignment specification and in
+the textbook\cite{Textbook}). Again, the type of ordering is set at module
+initialisation time. Apart from this, this module has the same interface as the
+communication module, if we don't take support for the debugging application
+into account.
 
-Test program:
-\begin{itemize}
-\item A simple distributed GUI chat program. Each chat client instance is a node
-  of the distributed system.
-\end{itemize}
+The group management module is the user-facing part of the system implemented on
+top of the previous two modules. It allows to create and remove groups, add and
+remove group members, handles the monitoring of live nodes, keeps track of
+changes in group membership, and allows to list the names of all existing
+groups.
 
-Debug application:
+The test program is a simple distributed GUI chat program in which each chat
+client instance is a node of the distributed system.
+
+The debug application is implemented as a special client for the aforementioned
+chat system that allows to watch the inner workings of the middleware. It has
+the following features:
 \begin{itemize}
-\item A malicious client for the aforementioned chat system.
-\item Simulates packet loss (send a message to a part of the group).
-\item Simulates packet rearrangement (send several messages in random order to
+\item Simulated packet loss (send a message to a part of the group).
+\item Simulated packet rearrangement (send several messages in random order to
   different nodes).
-\item Allows to choose message ordering.
-\item Allows to view the internal state.
-\item Allows to view a message's path.
-\item Provides a measure of system performance.
+\item Creation of a group with a chosen message ordering and multicast type.
+\item Display of the internal state of the system (such as message queues).
+\item Measurement of system performance.
 \end{itemize}
 
 \section{Design}
 
-We decided to implement our system in Scala and use Java RMI (?) for
-communication between processes. The choice of Scala was motivated by the desire
-to use a language that is more modern and convenient than Java, but still allows
-to run on JVM. The choice (?) of Java RMI over other alternatives was motivated
-by \ldots (other alternatives: Twitter Finagle, ZeroMQ, \ldots)
+We decided to implement our system in Scala and use Java RMI for communication
+between nodes. The choice of Scala was motivated by the desire to use a language
+that is more modern and convenient than Java, but still allows to run on
+JVM. Java RMI was chosen because it was the default option (recommended in the
+assignment specification) and we felt that other communication libraries that we
+looked at either didn't provide any benefit for our use case (Finagle) or did
+all the required work for us (ZeroMQ).
 
 Design of the communication module: simple, just use the reliable multicast
 algorithm from the textbook.
@@ -158,20 +170,24 @@ Design of the group management module:
 
 \section{Time Plan}
 
+Our preliminary plan looks as follows:
+
 \begin{tabular}{|l|p{10cm}|}
-\hline
-Week 49 & Implement the communication module. Start working on the GUI test programs. \\
-\hline
-Week 50 & Implement the message ordering module. \\
-\hline
-Week 51 & Implement the group management module. \\
-\hline
-Week 52 & Testing and bugfixing. Start writing the final report. \\
-\hline
-Week 1  & More testing and bugfixing. Time for any unforeseen delays. \\
-\hline
-Week 2  & Practical demonstration. Turn in the final report. \\
-\hline
+  \hline
+  Week 49 & Implement the communication module. Start working on implementing the
+  Paxos algorithm. Start working on the GUI test programs. \\
+  \hline
+  Week 50 & Implement the message ordering module. Produce a finished version of the Paxos algorithm. \\
+  \hline
+  Week 51 & Integrate the code written during the first two weeks; produce an
+  initial approximation of the final system. \\
+  \hline
+  Week 52 & Testing and bugfixing. Work on the test programs. Start writing the final report. \\
+  \hline
+  Week 1  & More testing and bugfixing. Time for any unforeseen delays. \\
+  \hline
+  Week 2  & Practical demonstration. Turn in the final report. \\
+  \hline
 \end{tabular}
 
 \begin{thebibliography}{9}
@@ -180,10 +196,10 @@ Week 2  & Practical demonstration. Turn in the final report. \\
 \newblock George Coulouris, Jean Dollimore, Tim Kindberg and Gordon Blair\\
 \newblock Addison-Wesley, 2011\\
 
-\bibitem{Birman} \emph{Guide to Reliable Distributed Systems -- Building
-    High-Assurance Applications and Cloud-Hosted Services}\\
-\newblock Kenneth Birman\\
-\newblock Springer, 2012\\
+\bibitem{Paxos} \emph{Paxos Made Simple}\\
+\newblock Leslie Lamport\\
+\newblock ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number
+121, December 2001) 51-58.\\
 
 \end{thebibliography}
 
