@@ -147,6 +147,13 @@ ordering, total ordering will be implemented with a sequencer node (specified as
 one of the inputs to the send function), and causal-total is just a combination
 of causal and total.
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=11cm]{graph1}
+\caption{Group management module.}
+\label{fig:group}
+\end{figure}
+
 The group management module has a slightly more complicated design. Each node is
 identified by a (host, port number, name) triple. A group is identified by its
 name; names are globally unique, which is enforced by a central server that also
@@ -155,14 +162,39 @@ server serves a hub through each new nodes can discover and join existing
 groups.
 
 The coordinator node in each group serves as a message sequencer and gateway
-through which new nodes join the group. If the coordinator node dies or leaves
-the group, a new coordinator is elected, and all group members and the central
-server are notified. The Paxos algorithm\cite{Paxos} is used to ensure that all
-nodes have a consistent view of group membership, group coordinator and the
-value of the total ordering counter.
+through which new nodes join the group. The process of joining a group is
+illustrated in figure~\ref{fig:group}. A node first contacts the central server,
+which knows the names of all groups and all coordinator nodes. When a node
+chooses which group it wants to join, it contacts the coordinator for that group
+and receives the list of all group members. The group then synchronises its view
+of group membership and the node is considered admitted.
 
-TODO: some words on partitioning, scalability and limitations.
+If the coordinator node dies or leaves the group, a new coordinator is elected,
+and all group members and the central server are notified. The Paxos
+algorithm\cite{Paxos} is used to ensure that all nodes have a consistent view of
+group membership, group coordinator and the value of the total ordering
+counter. The choice of Paxos was motivated by it being used for similar purposes
+in such real-world systems as Google Chubby\cite{Chubby}, IBM
+Spinnaker\cite{Spinnaker} and Doozer\cite{Doozer}.
 
+In case a group gets partitioned, all partitions will elect a new coordinator
+and will continue to function independently. The ones that can't contact the
+central server will know that they are the ones ``left behind''. They can either
+shut down, continue to communicate among themselves or wait for the central
+server to become available and try to rejoin the group.
+
+The system is designed to scale fairly well, since at no point there is a need
+to communicate with or store the names of all nodes in the system. Each node
+communicates only with the members of the groups it belongs to, and the central
+server communicates only with the coordinator nodes. The central server is
+obviously a single point of failure, but the groups don't depend on it to
+function and we believe that a central group catalog is needed in any case so
+that new nodes could discover what groups exist in the system.
+
+We expect our system to be able to support large numbers of groups and
+nodes. The exact limits will be determined empirically.
+
+\pagebreak
 
 \section{Time Plan}
 
@@ -196,6 +228,27 @@ Our preliminary plan looks as follows:
 \newblock Leslie Lamport\\
 \newblock ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number
 121, December 2001) 51-58.\\
+
+\bibitem{Chubby} \emph{The Chubby Lock Service for Loosely-Coupled Distributed}\\
+\newblock Mike Burrows\\
+\newblock OSDI'06: Seventh Symposium on Operating System Design and Implementation,
+Seattle, WA, November, 2006.\\
+\newblock \url{http://research.google.com/archive/chubby.html}\\
+\newblock URL accessed \today\\
+
+\bibitem{Doozer} \emph{Doozer -- a highly-available, completely consistent store for
+    small amounts of extremely important data.}\\
+\newblock Blake Mizerany, Keith Rarick et al.\\
+\newblock \url{https://github.com/ha/doozerd} \\
+\newblock URL accessed \today\\
+
+\bibitem{Spinnaker} \emph{Using Paxos to Build a Scalable, Consistent, and
+    Highly Available Datastore}\\
+\newblock Jun Rao, Eugene J. Shekita, Sandeep Tata\\
+\newblock Proceedings of the VLDB Endowment (PVLDB), Vol. 4, No. 4, pp. 243-254
+(2011)\\
+\newblock \url{http://arxiv.org/abs/1103.2408}\\
+\newblock URL accessed \today\\
 
 \end{thebibliography}
 
