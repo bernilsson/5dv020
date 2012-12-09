@@ -21,9 +21,9 @@ case class Host(host: String, port:Int, name:String);
 
 trait ComModule[T]{
   val recievers = Map[Host,Remote]();
+  val gMod: GroupCom;
   def send(data: T): Unit;
-  def get(): T;
-  def poll(): Boolean;
+
   protected def hostToRemote(h: Host): Reciever[T] = {
       val r = recievers.get(h);
       r match{
@@ -36,29 +36,7 @@ trait ComModule[T]{
       }
       }
   }
-}
-
-trait OrderingModule[T]{
-  def insert(m: IM[T]);
-  def get(): T;
-  def getAll(): Seq[T];
-  def createMessage(d:T): DataMessage[T];
-}
-
-trait GroupCom{
-  def getHosts(groupName: String): List[Host];
-  def hostDown(h: Host);
-}
-
-class BasicCom[T]
-  (val me:Host, val g: String, gMod: GroupCom, val order: OrderingModule[T])
-  extends ComModule[T] with Runnable {
-  
-  val inboundQ = new BlockingReciever[T]; 
-  private val q = new LinkedBlockingQueue[T]();
-  private val holdBack = new Queue[T]();
-  
-  private class AsyncSender
+  protected class AsyncSender
     (g: List[Host],m: IM[T],future: Promise[List[Host]]) extends Runnable{
     def run() = {
         future.setValue(g.map({ h =>
@@ -76,19 +54,42 @@ class BasicCom[T]
       }
   }
   
-  private def internal_send(g: List[Host], im: IM[T]) = {
+  protected def internal_send(g: List[Host], im: IM[T]) = {
     val future = new Promise[List[Host]];
     (new Thread(new AsyncSender(g,im,future))).start();
     future;
   }
-
+  protected val q = new LinkedBlockingQueue[T]();
+  def get(): T = q.take();
+  def poll(): Boolean = !q.isEmpty
   
+}
+
+trait OrderingModule[T]{
+  def insert(m: IM[T]);
+  def get(): T;
+  def getAll(): Seq[T];
+  def createMessage(d:T): DataMessage[T];
+}
+
+trait GroupCom{
+  def getHosts(groupName: String): List[Host];
+  def hostDown(h: Host);
+}
+
+class BasicCom[T]
+  (val me:Host, val g: String,val gMod: GroupCom, val order: OrderingModule[T])
+  extends ComModule[T] with Runnable {
+  
+  
+  private val holdBack = new Queue[T]();
+  
+  val inboundQ = new BlockingReciever[T];
+
+
   def send(d: T){
     internal_send(gMod.getHosts(g), IM(SimpleMessage(me),order.createMessage(d)));
   }
-  
-  def get(): T = q.take();
-  def poll(): Boolean = !q.isEmpty
   
   def run(){
     while(true){
@@ -105,6 +106,40 @@ class BasicCom[T]
   
   (new Thread(this)).start();
   
+}
+
+class ReliableCom[T]
+    (val me:Host, val g: String,val gMod: GroupCom, val order: OrderingModule[T])
+    extends ComModule[T] with Runnable{
+  val inboundQ = new BlockingReciever[T];
+  var rseq = 0;
+  val sequences = Map[Host,IntegerSet]();
+  def run(){
+    while(true){
+      val im = inboundQ.take();
+      im match {
+      case IM(rm: ReliableMessage, dm: DataMessage[T]) => {
+
+        if(!sequences.contains(rm.from)){
+          sequences += (rm.from -> new IntegerSet());
+        }
+        if(sequences(rm.from).contains(rm.rseq)){
+          //Message already received once
+        }else if(rm.from != me){
+          internal_send(gMod.getHosts(g), im)
+          println("in Run" + im);
+          order.insert(im);
+          order.getAll.foreach {q.put(_)};
+        }
+      }
+      }
+    }
+  }
+  def send(d: T){
+    rseq+=1;
+    internal_send(gMod.getHosts(g), IM(ReliableMessage(me,rseq),order.createMessage(d)));
+  }
+
 }
 
 /*DONT EAT ME*/
