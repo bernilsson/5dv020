@@ -4,6 +4,8 @@ version := "1.0"
 
 scalaVersion := "2.9.2"
 
+scalacOptions ++= Seq("-unchecked", "-deprecation")
+
 resolvers += "Twitter" at "http://maven.twttr.com/"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "1.8" % "test"
