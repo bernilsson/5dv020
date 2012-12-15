@@ -24,18 +24,18 @@ trait InternalCommunicator[T]{
   def get(): IM[T] = q.take();
   def poll(): Boolean = !q.isEmpty
   
-  private val recievers = Map[Host,Remote]();
+  private val receivers = Map[Host,Remote]();
   protected val onError: ErrorCallback;
   protected val q = new LinkedBlockingQueue[IM[T]]();
   
-  protected def hostToRemote(h: Host): Reciever[T] = {
-      val r = recievers.get(h);
+  protected def hostToRemote(h: Host): Receiver[T] = {
+      val r = receivers.get(h);
       r match{
-      case Some(x : Reciever[T]) => x;
+      case Some(x : Receiver[T]) => x;
       case None => {
         val reg = LocateRegistry.getRegistry(h.host, h.port); // TODO What if we get nothing
-        val x = reg.lookup(h.name).asInstanceOf[Reciever[T]]; // TODO classcast Exception
-        recievers += h -> x;
+        val x = reg.lookup(h.name).asInstanceOf[Receiver[T]]; // TODO classcast Exception
+        receivers += h -> x;
         x;
       }
       }
@@ -69,7 +69,7 @@ trait InternalCommunicator[T]{
 
 class BasicCom[T]
   (val me:Host, val onError: Host => Unit)
-  extends InternalCommunicator[T] with Reciever[T] {
+  extends InternalCommunicator[T] with Receiver[T] {
   
   def send(hosts: List[Host],dm: DM[T]){
     internal_send(hosts, IM(SimpleMessage(me),dm));
@@ -82,7 +82,7 @@ class BasicCom[T]
 
 class ReliableCom[T]
     (val me:Host, val onError: Host => Unit, val hostCallback: () => List[Host])
-    extends InternalCommunicator[T] with Reciever[T]{
+    extends InternalCommunicator[T] with Receiver[T]{
   var rseq = 0;
   val sequences = Map[Host,IntegerSet]();
   def recv(im: IM[T]){

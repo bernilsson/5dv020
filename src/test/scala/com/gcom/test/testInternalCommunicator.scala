@@ -11,7 +11,7 @@ import com.gcom.Message
 import com.gcom.IM
 import com.gcom.DataMessage
 import com.gcom.DM
-import com.gcom.Reciever
+import com.gcom.Receiver
 import com.gcom.Host
 import com.gcom.BasicCom
 
@@ -37,7 +37,7 @@ class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll 
   modules.foreach({
     module => registry.rebind(
         module.me.name,
-        UnicastRemoteObject.exportObject(module.asInstanceOf[Reciever[String]],0));
+        UnicastRemoteObject.exportObject(module.asInstanceOf[Receiver[String]],0));
   });
   
   before {

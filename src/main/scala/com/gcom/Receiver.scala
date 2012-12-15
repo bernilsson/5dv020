@@ -37,7 +37,7 @@ case class UnorderedMessage(data: Any) extends DataMessage;
 
 case class OrderedMessage(order: Int, data: Any) extends DataMessage;
 */
-trait Reciever[T] extends Remote {
+trait Receiver[T] extends Remote {
   @throws(classOf[RemoteException])
   def recv(m : IM[T]) : Unit 
 }
