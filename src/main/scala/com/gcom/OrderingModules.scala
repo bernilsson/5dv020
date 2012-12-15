@@ -93,12 +93,12 @@ class CausalQueue[T](index: Int) extends AbstractOrderingModule[T]{
         val index = indexOf(im.m.from);
         val dm = im.dm.asInstanceOf[CausalMessage[T]];
         changed = if(dm.vector(index) == vectorClock(index) + 1 &&
-          earlierByOthers(index,vectorClock,dm.vector)){
-          deliveryQueue.enqueue(im.dm.d);
-          vectorClock = vectorClock updated (index,vectorClock(index) + 1);
-          true
-        }
-        else false
+            earlierByOthers(index,vectorClock,dm.vector)){
+            deliveryQueue.enqueue(im.dm.d);
+            vectorClock = vectorClock updated (index,vectorClock(index) + 1);
+            true
+          }
+          else false
       };
     }
   }
