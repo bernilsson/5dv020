@@ -3,6 +3,14 @@ package com.gcom
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Map
 
+trait OrderingModule[T]{
+  def insert(m: IM[T]);
+  def get(): T;
+  def getAll(): Seq[T];
+  def createMessage(d:T): DataMessage[T];
+}
+
+
 abstract class AbstractOrderingModule[T] extends OrderingModule[T]{
  val deliveryQueue = Queue[T]();
  def get(): T = deliveryQueue.dequeue;
