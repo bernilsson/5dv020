@@ -11,4 +11,8 @@ case class Causal() extends Ordering;
 case class Total() extends Ordering;
 case class CausalTotal() extends Ordering;
 
+abstract class JoinGroup;
+case class NewGroup(groupName: String, reliability: Reliability, ordering: Ordering);
+case class ExistingGroup(groupName: String);
+
 case class Group(groupName: String, reliability: Reliability, ordering: Ordering)
