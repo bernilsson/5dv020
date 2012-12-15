@@ -2,8 +2,6 @@ package com.gcom
 
 import java.rmi.Remote
 import java.rmi.RemoteException
-import scala.actors.threadpool.BlockingQueue
-import scala.actors.threadpool.LinkedBlockingQueue
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Map
 
@@ -43,63 +41,3 @@ trait Reciever[T] extends Remote {
   @throws(classOf[RemoteException])
   def recv(m : IM[T]) : Unit 
 }
-
-class BlockingReciever[T]() extends LinkedBlockingQueue[IM[T]] with Reciever[T]{
-  def recv(m: IM[T]): Unit = {
-    println("recv" + m)
-    this.add(m);
-  }
-} 
-
-/*
-
-class FIFOQueue() extends Order{
-  private var curSeq = 0;
-  private val sequences = Map[Host,Int]();
-  private val holdbacks = Map[Host,List[(Message,SeqMessage)]]();
-  val deliveryQueue = Queue[Any]();
-  
-  def add(m: Message){
-    m.data match {
-      case data: SeqMessage => handle_message(m, data); 
-    }
-  }
-  
-  private def handle_message(m: Message, data: SeqMessage){
-    if(holdbacks.get(m.from).isEmpty){
-      holdbacks += (m.from -> List[(Message,SeqMessage)]());
-    }
-    if(sequences.get(m.from).isEmpty){
-      sequences += (m.from -> 0);
-    }
-    if(sequences(m.from) == data.seq){
-      sequences += m.from -> (data.seq + 1);
-      deliveryQueue += (data.data);
-      check_queue(m.from);
-    }
-    else {
-      holdbacks += m.from-> ((m,data) :: holdbacks(m.from));  
-    }
-  }
-  
-  private def check_queue(host: Host){
-    var sequence = sequences(host)
-    var list = holdbacks(host).sortBy(t => t._2.seq);
-    while(list.nonEmpty && sequence == list.head._2.seq){
-      deliveryQueue += list.head._2.data;
-      sequence += 1;
-      list = list.tail;
-    }
-    holdbacks += (host -> list);
-    sequences += (host -> sequence);
-  }
-  
-  def createMessage(data: (Any)): SeqMessage = {
-    val mes = SeqMessage(curSeq,data);
-    curSeq += 1;
-    return mes;
-  }
-  
-}
-
-*/
