@@ -14,21 +14,21 @@ import java.util.concurrent.LinkedBlockingQueue
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Map
 
-case class Host(host: String, port:Int, name:String);
+
 
 trait InternalCommunicator[T]{
 
-  type ErrorCallback = (Host) => Unit;
+  type ErrorCallback = (Node) => Unit;
   
-  def send(hosts: List[Host], dm: DM[T]): Unit;
+  def send(hosts: List[Node], dm: DM[T]): Unit;
   def get(): IM[T] = q.take();
   def poll(): Boolean = !q.isEmpty
   
-  private val receivers = Map[Host,Remote]();
+  private val receivers = Map[Node,Remote]();
   protected val onError: ErrorCallback;
   protected val q = new LinkedBlockingQueue[IM[T]]();
   
-  protected def hostToRemote(h: Host): Receiver[T] = {
+  protected def hostToRemote(h: Node): Receiver[T] = {
       val r = receivers.get(h);
       r match{
       case Some(x : Receiver[T]) => x;
@@ -41,7 +41,7 @@ trait InternalCommunicator[T]{
       }
   }
   protected class AsyncSender
-    (g: List[Host],m: IM[T],future: Promise[List[Host]]) extends Runnable{
+    (g: List[Node],m: IM[T],future: Promise[List[Node]]) extends Runnable{
     def run() = {
         future.setValue(g.map({ h =>
         try{
@@ -58,8 +58,8 @@ trait InternalCommunicator[T]{
       }
   }
   
-  protected def internal_send(g: List[Host], im: IM[T]) = {
-    val future = new Promise[List[Host]];
+  protected def internal_send(g: List[Node], im: IM[T]) = {
+    val future = new Promise[List[Node]];
     (new Thread(new AsyncSender(g,im,future))).start();
     future;
   }
@@ -68,10 +68,10 @@ trait InternalCommunicator[T]{
 
 
 class BasicCom[T]
-  (val me:Host, val onError: Host => Unit)
+  (val me:Node, val onError: Node => Unit)
   extends InternalCommunicator[T] with Receiver[T] {
   
-  def send(hosts: List[Host],dm: DM[T]){
+  def send(hosts: List[Node],dm: DM[T]){
     internal_send(hosts, IM(SimpleMessage(me),dm));
   }
   def recv(im: IM[T]){
@@ -81,10 +81,10 @@ class BasicCom[T]
  
 
 class ReliableCom[T]
-    (val me:Host, val onError: Host => Unit, val hostCallback: () => List[Host])
+    (val me:Node, val onError: Node => Unit, val hostCallback: () => List[Node])
     extends InternalCommunicator[T] with Receiver[T]{
   var rseq = 0;
-  val sequences = Map[Host,IntegerSet]();
+  val sequences = Map[Node,IntegerSet]();
   def recv(im: IM[T]){
     im match {
       case IM(rm: ReliableMessage, dm: DataMessage[T]) => {
@@ -102,7 +102,7 @@ class ReliableCom[T]
       }
   }
 
-  def send(hosts: List[Host], dm: DM[T]){
+  def send(hosts: List[Node], dm: DM[T]){
     rseq+=1;
     internal_send(hosts, IM(ReliableMessage(me,rseq),dm));
   }

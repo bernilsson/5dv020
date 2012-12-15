@@ -8,10 +8,10 @@ import scala.collection.mutable.Map
 
 /*Cases for message module*/
 abstract class Message{
-  val from: Host;
+  val from: Node;
 }
-case class SimpleMessage(from: Host) extends Message;
-case class ReliableMessage(from: Host, rseq: Int) extends Message;
+case class SimpleMessage(from: Node) extends Message;
+case class ReliableMessage(from: Node, rseq: Int) extends Message;
 
 case class IM[T](m:Message,dm:DataMessage[T])
 

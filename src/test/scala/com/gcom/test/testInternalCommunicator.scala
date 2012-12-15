@@ -12,7 +12,7 @@ import com.gcom.IM
 import com.gcom.DataMessage
 import com.gcom.DM
 import com.gcom.Receiver
-import com.gcom.Host
+import com.gcom.Node
 import com.gcom.BasicCom
 
 class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll  {
@@ -25,11 +25,11 @@ class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll 
   var registry = LocateRegistry.createRegistry(PORTNUMBER);
   //Create The objects;
   var errors = 0;
-  val callback = {h: Host => errors += 1}
+  val callback = {h: Node => errors += 1}
   var modules = List(
-      new BasicCom[String](Host("localhost",PORTNUMBER,"1"), callback),
-      new BasicCom[String](Host("localhost",PORTNUMBER,"2"), callback),
-      new BasicCom[String](Host("localhost",PORTNUMBER,"3"), callback)
+      new BasicCom[String](Node("localhost",PORTNUMBER,"1"), callback),
+      new BasicCom[String](Node("localhost",PORTNUMBER,"2"), callback),
+      new BasicCom[String](Node("localhost",PORTNUMBER,"3"), callback)
       );
       
   val nodes = modules map {_.me}

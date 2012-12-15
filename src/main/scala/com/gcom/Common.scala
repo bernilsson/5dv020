@@ -16,3 +16,5 @@ case class NewGroup(groupName: String, reliability: Reliability, ordering: Order
 case class ExistingGroup(groupName: String);
 
 case class Group(groupName: String, reliability: Reliability, ordering: Ordering)
+
+case class Node(host: String, port:Int, name:String);

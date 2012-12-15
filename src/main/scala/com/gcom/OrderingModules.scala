@@ -27,8 +27,8 @@ class UnorderedQueue[T]() extends AbstractOrderingModule[T]{
 }
 
 class FIFOQueue[T]() extends AbstractOrderingModule[T]{
-  private val holdBacks = Map[Host,List[SeqM[T]]]();
-  private val sequences = Map[Host,Int]();
+  private val holdBacks = Map[Node,List[SeqM[T]]]();
+  private val sequences = Map[Node,Int]();
   private var curSeq = 0;
   
   def insert(im: IM[T]){
@@ -53,7 +53,7 @@ class FIFOQueue[T]() extends AbstractOrderingModule[T]{
     }
   }
   
-  private def check_queue(host: Host){
+  private def check_queue(host: Node){
     var sequence = sequences(host)
     var list = holdBacks(host).sortBy(m => m.seq);
     while(list.nonEmpty && sequence == list.head.seq){
@@ -75,7 +75,7 @@ class FIFOQueue[T]() extends AbstractOrderingModule[T]{
 class CausalQueue[T](index: Int) extends AbstractOrderingModule[T]{
   private var vectorClock = Vector[Int]();
   private var holdBacks = List[IM[T]]();
-  private var indexOf = Map[Host,Int]();
+  private var indexOf = Map[Node,Int]();
   
   private var myIndex = index;
   def insert(im: IM[T]){
