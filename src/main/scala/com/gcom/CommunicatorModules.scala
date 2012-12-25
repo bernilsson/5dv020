@@ -13,11 +13,12 @@ import java.util.AbstractQueue
 import java.util.concurrent.LinkedBlockingQueue
 import scala.collection.mutable.Queue
 import scala.collection.mutable.Map
+import org.slf4j.LoggerFactory
 
 
 
 trait InternalCommunicator[T]{
-
+  def logger = LoggerFactory.getLogger("KDURLFilter")
   type ErrorCallback = (Node) => Unit;
   
   def send(hosts: List[Node], dm: DM[T]): Unit;
@@ -75,6 +76,7 @@ class BasicCom[T]
     internal_send(hosts, IM(SimpleMessage(me),dm));
   }
   def recv(im: IM[T]){
+    logger.trace(im.toString);
     q.put(im);
   }
 }

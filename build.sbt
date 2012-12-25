@@ -14,3 +14,5 @@ libraryDependencies += "org.scala-lang" % "scala-swing" % "2.9.2"
 
 
 libraryDependencies += "com.twitter"   % "util-collection"   % "5.3.10"
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.1"
