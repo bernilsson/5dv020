@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 
 
 trait InternalCommunicator[T]{
-  def logger = LoggerFactory.getLogger("KDURLFilter")
+  def logger = LoggerFactory.getLogger(getClass)
   type ErrorCallback = (Node) => Unit;
   
   def send(hosts: List[Node], dm: DM[T]): Unit;
