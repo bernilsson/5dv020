@@ -105,8 +105,10 @@ class ReliableCom[T]
   }
 
   def send(hosts: List[Node], dm: DM[T]){
-    rseq+=1;
-    internal_send(hosts, IM(ReliableMessage(me,rseq),dm));
+    this.synchronized {
+    	rseq+=1;
+    	internal_send(hosts, IM(ReliableMessage(me,rseq),dm));
+    } 
   }
 
 }
