@@ -6,28 +6,33 @@ import scala.collection.immutable.Map
 trait OrderingModule[T]{
   def insert(m: IM[T]);
   def get(): T;
+  def getAll(): Seq[T];
   def createMessage(d:T): DataMessage[T];
   def updateView(nodes: Seq[Node]);
 }
 
 
 abstract class AbstractOrderingModule[T] extends OrderingModule[T]{
- var deliveryQueue = Queue[T]();
+ private var deliveryQueue = Queue[T]();
  def get(): T = {
    val (temp, queue) = deliveryQueue.dequeue;
    deliveryQueue = queue;
    temp;
  }
+ def getAll(): Seq[T] = {
+   val ret = deliveryQueue.toSeq;
+   deliveryQueue = Queue[T]();
+   ret
+ }
  
- 
- protected def insert(v: T) = {
+ protected def deliver(v: T) = {
    deliveryQueue = deliveryQueue.enqueue(v);
  }
 }
 
 class UnorderedQueue[T]() extends AbstractOrderingModule[T]{
   def insert(im: IM[T]){
-    deliveryQueue.enqueue(im.dm.d);
+    deliver(im.dm.d);
   }
   def createMessage(d: T): DataMessage[T] = {
     DM(d);
@@ -54,7 +59,7 @@ class FIFOQueue[T]() extends AbstractOrderingModule[T]{
     }
     if(sequences(m.from) == dm.seq){
       sequences += m.from -> (dm.seq + 1);
-      deliveryQueue = deliveryQueue enqueue (dm.d);
+      deliver(dm.d);
       check_queue(m.from);
     }
     else {
@@ -66,7 +71,7 @@ class FIFOQueue[T]() extends AbstractOrderingModule[T]{
     var sequence = sequences(host)
     var list = holdBacks(host).sortBy(m => m.seq);
     while(list.nonEmpty && sequence == list.head.seq){
-      deliveryQueue = deliveryQueue enqueue list.head.d;
+      deliver(list.head.d);
       sequence += 1;
       list = list.tail;
     }
@@ -119,7 +124,7 @@ class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
         val dm = im.dm.asInstanceOf[CausalMessage[T]];
         changed = if(dm.vector(index) == vectorClock(index) + 1 &&
             earlierByOthers(index,vectorClock,dm.vector)){
-            insert(im.dm.d);
+            deliver(im.dm.d);
             vectorClock = vectorClock updated (index,vectorClock(index) + 1);
             true
           }
@@ -163,5 +168,20 @@ class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
     CausalMessage(vectorClock, d);
     
   }
+}
+
+
+class TotalOrderQueue[T](var orderingCallback: () => Int) extends AbstractOrderingModule[T]{
+  var holdBacks = Queue[TotalMessage[T]]();
+  var currentOrder = 0;
+  def insert(im: IM[T]){
+    //TODO exception handling
+    holdBacks = holdBacks enqueue im.dm.asInstanceOf[TotalMessage[T]]
+    
+  }
+  def createMessage(d: T): DataMessage[T] = {
+    TotalMessage(orderingCallback(),d);
+  }
+  def updateView(nodes: Seq[Node]) {}
 }
 

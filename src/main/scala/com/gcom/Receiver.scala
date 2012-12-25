@@ -24,7 +24,7 @@ class SeqMessage[T](val seq: Int, d: T) extends DataMessage[T]{
 case class SeqM[T](seq: Int, d: T) extends DataMessage[T];
 case class DM[T](d: T) extends DataMessage[T];
 case class CausalMessage[T](vector: Vector[Int], d: T) extends DataMessage[T];
-
+case class TotalMessage[T](order: Int, d: T) extends DataMessage[T];
 abstract class DataMessage[T]{
   val d: T;
 }
