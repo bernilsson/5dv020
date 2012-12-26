@@ -7,3 +7,5 @@ target/
 .project
 /.cache
 /.classpath
+.settings/
+bin/
