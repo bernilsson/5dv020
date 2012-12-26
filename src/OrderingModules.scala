@@ -1,7 +1,8 @@
-package com.gcom
+
 
 import scala.collection.immutable.Queue
 import scala.collection.immutable.Map
+
 
 trait OrderingModule[T]{
   def insert(m: IM[T]);

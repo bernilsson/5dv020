@@ -1,17 +1,7 @@
-package com.gcom
-
-import java.rmi.registry.Registry
 import java.rmi.registry.LocateRegistry
 import java.rmi.Remote
-import java.net.Inet4Address
-import java.net.InetAddress
-import scala.compat.Platform
-import com.twitter.util.{Future, Promise}
-import com.twitter.util.FutureTask
-import java.util.concurrent.Callable
-import java.util.AbstractQueue
+import com.twitter.util.Promise
 import java.util.concurrent.LinkedBlockingQueue
-import scala.collection.mutable.Queue
 import scala.collection.mutable.Map
 import org.slf4j.LoggerFactory
 
@@ -76,7 +66,7 @@ class BasicCom[T]
     internal_send(hosts, IM(SimpleMessage(me),dm));
   }
   def recv(im: IM[T]){
-    logger.trace(im.toString);
+    logger.info(im.toString);
     q.put(im);
   }
 }

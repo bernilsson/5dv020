@@ -1,4 +1,4 @@
-package com.gcom
+
 
 abstract class Reliability
 case class Reliable() extends Reliability;
