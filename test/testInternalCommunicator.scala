@@ -1,19 +1,6 @@
-package com.gcom.test
-import java.rmi.registry.Registry
-import java.rmi.registry.LocateRegistry
 import org.scalatest._
+import java.rmi.registry.LocateRegistry
 import java.rmi.server.UnicastRemoteObject
-import com.gcom.IntegerSet
-import com.gcom.OrderingModule
-import scala.collection.mutable.Queue
-import com.gcom.OrderingModule
-import com.gcom.Message
-import com.gcom.IM
-import com.gcom.DataMessage
-import com.gcom.DM
-import com.gcom.Receiver
-import com.gcom.Node
-import com.gcom.BasicCom
 
 class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll  {
   

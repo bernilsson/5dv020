@@ -1,5 +1,6 @@
-package com.gcom
 
+
+import scala.annotation.tailrec
 import scala.annotation.tailrec
 
 class IntegerSet {

@@ -1,7 +1,6 @@
-package com.gcom.test
+
 
 import org.scalatest.FunSuite
-import com.gcom.IntegerSet
 
 class TestIntegerSet extends FunSuite{
   test("IntegerSet should be empty"){

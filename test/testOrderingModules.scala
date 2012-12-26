@@ -1,14 +1,5 @@
-package com.gcom.test
+
 import org.scalatest._
-import com.gcom.UnorderedQueue
-import com.gcom.IM
-import com.gcom.DM
-import com.gcom.Message
-import com.gcom.SimpleMessage
-import com.gcom.Node
-import com.gcom.SeqM
-import com.gcom.DataMessage
-import com.gcom.FIFOQueue
 import scala.util.Random
 
 

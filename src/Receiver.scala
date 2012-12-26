@@ -1,9 +1,7 @@
-package com.gcom
+
 
 import java.rmi.Remote
 import java.rmi.RemoteException
-import scala.collection.mutable.Queue
-import scala.collection.mutable.Map
 
 
 /*Cases for message module*/
