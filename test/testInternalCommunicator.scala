@@ -12,19 +12,19 @@ class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll 
   var registry = LocateRegistry.createRegistry(PORTNUMBER);
   //Create The objects;
   var errors = 0;
-  val callback = {h: Node => errors += 1}
+  val callback = {h: List[Node] => errors += 1}
   var modules = List(
-      new BasicCom[String](Node("localhost",PORTNUMBER,"1"), callback),
-      new BasicCom[String](Node("localhost",PORTNUMBER,"2"), callback),
-      new BasicCom[String](Node("localhost",PORTNUMBER,"3"), callback)
+      new BasicCom[String](1, callback),
+      new BasicCom[String](2, callback),
+      new BasicCom[String](3, callback)
       );
       
   val nodes = modules map {_.me}
   //Bind the objects to registry;
   modules.foreach({
     module => registry.rebind(
-        module.me.name,
-        UnicastRemoteObject.exportObject(module.asInstanceOf[Receiver[String]],0));
+        module.me.id.toString,
+        UnicastRemoteObject.exportObject(module,0));
   });
   
   before {

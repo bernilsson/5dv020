@@ -1,14 +1,18 @@
-
-
 import scala.collection.immutable.Queue
 import scala.collection.immutable.Map
+import org.slf4j.LoggerFactory
 
 
+/**
+ * Modules for ordering incoming system messages.
+ * Needs to be constructed so they at first only include themselves.
+ * @param <T>
+ */
 trait OrderingModule[T]{
-  def insert(m: IM[T]);
+  def insert(m: Message);
   def get(): T;
   def getAll(): Seq[T];
-  def createMessage(d:T): DataMessage[T];
+  def createMessage(d:T): DataMessage;
   def updateView(nodes: Seq[Node]);
 }
 
@@ -32,26 +36,28 @@ abstract class AbstractOrderingModule[T] extends OrderingModule[T]{
 }
 
 class UnorderedQueue[T]() extends AbstractOrderingModule[T]{
-  def insert(im: IM[T]){
-    deliver(im.dm.d);
+  def insert(im: Message){
+    deliver(im.dm.asInstanceOf[DM[T]].d);
   }
-  def createMessage(d: T): DataMessage[T] = {
+  def createMessage(d: T): DataMessage = {
     DM(d);
   }
   def updateView(nodes: Seq[Node]) {}
 }
 
 class FIFOQueue[T]() extends AbstractOrderingModule[T]{
+  
   private var holdBacks = Map[Node,List[SeqM[T]]]();
   private var sequences = Map[Node,Int]();
   private var curSeq = 0;
   
-  def insert(im: IM[T]){
+  def insert(im: Message){
     im match {
-      case IM(m: Message,dm: SeqM[T]) => handle_message(m,dm); 
+      case Message(m: Header,sm: SeqM[T]) => handle_message(m,sm); 
     }
+    
   }
-  private def handle_message(m: Message,dm: SeqM[T]){
+  private def handle_message(m: Header,dm: SeqM[T]){
     if(holdBacks.get(m.from).isEmpty){
       holdBacks += (m.from -> List[SeqM[T]]());
     }
@@ -80,7 +86,7 @@ class FIFOQueue[T]() extends AbstractOrderingModule[T]{
     sequences += (host -> sequence);
   }
   
-  def createMessage(d:T): DataMessage[T] = {
+  def createMessage(d:T): DataMessage = {
     val msg = SeqM(curSeq,d);
     curSeq += 1;
     return msg;
@@ -104,18 +110,18 @@ class FIFOQueue[T]() extends AbstractOrderingModule[T]{
 class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
   
   private var vectorClock = Vector[Int]();
-  private var holdBacks = List[IM[T]]();
+  private var holdBacks = List[Message]();
   private var indexOf = Map[Node,Int]();
   
   private val myAddr = me;
   
-  def insert(im: IM[T]){
+  def insert(im: Message){
     im match {
-      case IM(m: Message,dm: CausalMessage[T]) => handle_message(im); 
+      case Message(m: Header,dm: CausalMessage[T]) => handle_message(im); 
     }
   }
   
-  private def handle_message(newIm: IM[T]){
+  private def handle_message(newIm: Message){
     holdBacks = newIm :: holdBacks
     var changed = true;
     
@@ -125,7 +131,7 @@ class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
         val dm = im.dm.asInstanceOf[CausalMessage[T]];
         changed = if(dm.vector(index) == vectorClock(index) + 1 &&
             earlierByOthers(index,vectorClock,dm.vector)){
-            deliver(im.dm.d);
+            deliver(dm.d);
             vectorClock = vectorClock updated (index,vectorClock(index) + 1);
             true
           }
@@ -163,7 +169,7 @@ class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
       
     }
   
-  def createMessage(d:T): DataMessage[T] = {
+  def createMessage(d:T): DataMessage = {
     val index = indexOf(me);
     vectorClock = vectorClock updated (index, vectorClock( index + 1 ))
     CausalMessage(vectorClock, d);
@@ -175,12 +181,12 @@ class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
 class TotalOrderQueue[T](var orderingCallback: () => Int) extends AbstractOrderingModule[T]{
   var holdBacks = Queue[TotalMessage[T]]();
   var currentOrder = 0;
-  def insert(im: IM[T]){
+  def insert(im: Message){
     //TODO exception handling
     holdBacks = holdBacks enqueue im.dm.asInstanceOf[TotalMessage[T]]
     
   }
-  def createMessage(d: T): DataMessage[T] = {
+  def createMessage(d: T): DataMessage = {
     TotalMessage(orderingCallback(),d);
   }
   def updateView(nodes: Seq[Node]) {}

@@ -4,7 +4,8 @@ import scala.util.Random
 
 
 class testOrderingModules extends FunSuite {
-  def createSimpleMessage(msg: DataMessage[String]) = IM( SimpleMessage(Node("f", 0, "n")), msg) 
+  val dummyNode = new DummyNode(); 
+  def createSimpleMessage(msg: DataMessage) = Message( NonReliableMessage(dummyNode), msg) 
   //def createMessageFrom()
   
   test("Unordered Queue should hold messages"){
@@ -19,6 +20,7 @@ class testOrderingModules extends FunSuite {
     val q = new FIFOQueue[String]();
     val rand = new Random();
     for(i <- rand.shuffle(Range(0,10))) q insert createFIFOMsg(i, "l" + i);
+    
     assert(q.getAll.toSeq === Range(0,10).map("l" + _))
   }
   

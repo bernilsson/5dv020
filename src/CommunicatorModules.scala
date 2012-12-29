@@ -7,18 +7,18 @@ import org.slf4j.LoggerFactory
 
 
 
-trait InternalCommunicator[T]{
+trait InternalCommunicator[T] extends Receiver{
   def logger = LoggerFactory.getLogger(getClass)
-  type ErrorCallback = (Node) => Unit;
+  type ErrorCallback = List[Node] => Unit;
   
   def send(hosts: List[Node], dm: DM[T]): Unit;
-  def get(): IM[T] = q.take();
+  def get(): Message = q.take();
   def poll(): Boolean = !q.isEmpty
   
   private val receivers = Map[Node,Remote]();
   protected val onError: ErrorCallback;
-  protected val q = new LinkedBlockingQueue[IM[T]]();
-  
+  protected val q = new LinkedBlockingQueue[Message]();
+  /*
   protected def hostToRemote(h: Node): Receiver[T] = {
       val r = receivers.get(h);
       r match{
@@ -31,41 +31,42 @@ trait InternalCommunicator[T]{
       }
       }
   }
+  */
   protected class AsyncSender
-    (g: List[Node],m: IM[T],future: Promise[List[Node]]) extends Runnable{
+    (groupMembers: List[Node], m: Message, future: Promise[List[Node]]) extends Runnable{
     def run() = {
-        future.setValue(g.map({ h =>
-        try{
-          hostToRemote(h) recv(m)
-          None;
-        } catch{
-        case e : Exception => {
-            onError(h)
-            //TODO Log exception
-            Some(h);
+        future.setValue(groupMembers.map({ node =>
+          try{
+            node.ref.recv(m)
+            None;
+          } catch{
+            case e : Exception => {
+              logger.error("Node: " + node + " could not recieve " + m)
+              Some(node);
+            }
           }
-        }
-        }).flatten);
+          }).flatten);
       }
   }
   
-  protected def internal_send(g: List[Node], im: IM[T]) = {
-    val future = new Promise[List[Node]];
-    (new Thread(new AsyncSender(g,im,future))).start();
-    future;
+  protected def internal_send(g: List[Node], im: Message) = {
+    val failures = new Promise[List[Node]];
+    //When failures occur, it will be with a list of failed nodes.
+    failures.onSuccess(onError)
+    (new Thread(new AsyncSender(g,im,failures))).start();
+    
   }
   
 }
 
-
 class BasicCom[T]
-  (val me:Node, val onError: Node => Unit)
-  extends InternalCommunicator[T] with Receiver[T] {
-  
+  (id:Int, val onError: List[Node] => Unit)
+  extends InternalCommunicator[T] with Receiver {
+  val me = RefNode(this,id);
   def send(hosts: List[Node],dm: DM[T]){
-    internal_send(hosts, IM(SimpleMessage(me),dm));
+    internal_send(hosts, Message(NonReliableMessage(me),dm));
   }
-  def recv(im: IM[T]){
+  def recv(im: Message){
     logger.info(im.toString);
     q.put(im);
   }
@@ -73,13 +74,14 @@ class BasicCom[T]
  
 
 class ReliableCom[T]
-    (val me:Node, val onError: Node => Unit, val hostCallback: () => List[Node])
-    extends InternalCommunicator[T] with Receiver[T]{
+    (val id: Int, val onError: List[Node] => Unit, val hostCallback: () => List[Node])
+    extends InternalCommunicator[T] with Receiver{
+  val me = RefNode(this,id)
   var rseq = 0;
   val sequences = Map[Node,IntegerSet]();
-  def recv(im: IM[T]){
-    im match {
-      case IM(rm: ReliableMessage, dm: DataMessage[T]) => {
+  def recv(im: Message){ im match {
+      //Only deliver reliable messages in a reliable way.
+      case Message(rm: ReliableMessage, dm: DataMessage) => {
 
         if(!sequences.contains(rm.from)){
           sequences += (rm.from -> new IntegerSet());
@@ -87,9 +89,13 @@ class ReliableCom[T]
         if(sequences(rm.from).contains(rm.rseq)){
           //Message already received once, ignore
         }else if(rm.from != me){
-          internal_send(hostCallback(), im)
+          //internal_send(hostCallback(), im)
           q.put(im);
         }
+      }
+      //If message is not reliable, deliver it directly
+      case im: Message => {
+        q.put(im)
       }
       }
   }
@@ -97,7 +103,7 @@ class ReliableCom[T]
   def send(hosts: List[Node], dm: DM[T]){
     this.synchronized {
     	rseq+=1;
-    	internal_send(hosts, IM(ReliableMessage(me,rseq),dm));
+    	internal_send(hosts, Message(ReliableMessage(me,rseq),dm));
     } 
   }
 
