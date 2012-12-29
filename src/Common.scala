@@ -16,15 +16,22 @@ case class ExistingGroup(groupName: String) extends JoinGroup;
 
 case class Group(groupName: String, reliability: Reliability, ordering: Ordering)
 
+/**
+ * A Node in the system, needed so we can have a DummyNode for testing purposes
+ */
 abstract class Node{
   def ref: Receiver;
   def id: Int;
 }
 
-case class RefNode(ref: Receiver, id: Int) extends Node{
- 
-};
+/**
+ * Implementation of Node class used by the system
+ */
+case class RefNode(ref: Receiver, id: Int) extends Node
 
+/**
+ * Node used for testing ordering modules.
+ */
 class DummyNode() extends Node{
   def ref: Receiver = null;
   def a = null;

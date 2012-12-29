@@ -8,33 +8,55 @@ import org.slf4j.LoggerFactory
  * Needs to be constructed so they at first only include themselves.
  * @param <T>
  */
+//Could be altered to have a callback on deliver instead.
+
+//None of the implemented orderings can properly handle updateView
+
 trait OrderingModule[T]{
   def insert(m: Message);
   def get(): T;
   def getAll(): Seq[T];
   def createMessage(d:T): DataMessage;
-  def updateView(nodes: Seq[Node]);
+  def updateView(nodes: Seq[Node]); //Don't think this is possible to do in one common way!
 }
 
-
+/**
+ * Common behavior between the ordering modules
+ */
 abstract class AbstractOrderingModule[T] extends OrderingModule[T]{
  private var deliveryQueue = Queue[T]();
- def get(): T = {
+ 
+ /**
+ * @return the next item from the queue;
+ */
+def get(): T = {
    val (temp, queue) = deliveryQueue.dequeue;
    deliveryQueue = queue;
    temp;
  }
- def getAll(): Seq[T] = {
+
+ /**
+ * @return all items available for retrieval
+ */
+def getAll(): Seq[T] = {
    val ret = deliveryQueue.toSeq;
    deliveryQueue = Queue[T]();
    ret
  }
  
- protected def deliver(v: T) = {
-   deliveryQueue = deliveryQueue.enqueue(v);
+ /**
+ * @param value to deliver to userspace  
+ */
+protected def deliver(value: T) = {
+   deliveryQueue = deliveryQueue.enqueue(value);
  }
 }
 
+/**
+ * A Queue that does nothing to order the incoming elements
+ 
+ * @param <T>
+ */
 class UnorderedQueue[T]() extends AbstractOrderingModule[T]{
   def insert(im: Message){
     deliver(im.dm.asInstanceOf[DM[T]].d);
@@ -45,8 +67,16 @@ class UnorderedQueue[T]() extends AbstractOrderingModule[T]{
   def updateView(nodes: Seq[Node]) {}
 }
 
+/** A Queue delivering each message in the order they were sent by 
+ * that specific node.
+ * @param <T> The type to store inside this ordering module
+ */
 class FIFOQueue[T]() extends AbstractOrderingModule[T]{
   
+  //TODO What will new nodes do? They have no knowledge of earlier sequence numbers... 
+  // 1. Assume first message they receive is the first in the sequence (bad)
+  // 2. Implement some way to ask that specific node.
+  // 3. When node joins, send a sequence number to him
   private var holdBacks = Map[Node,List[SeqM[T]]]();
   private var sequences = Map[Node,Int]();
   private var curSeq = 0;
@@ -144,12 +174,12 @@ class CausalQueue[T](me: Node) extends AbstractOrderingModule[T]{
       index: Int, 
       myClock: Vector[Int], 
       otherClock: Vector[Int]): Boolean = {
-     val a = for(i <- 0 to myClock.length
-        if(i != index && otherClock(i) > myClock(i))) yield{
-          false;
+    var wasEarlier = true;
+    for(i <- 0 to myClock.length
+        if(i != index && otherClock(i) > myClock(i))) {
+          wasEarlier = false;
         }
-     //If the above predicate was true for zero elements, it was earlier than others
-     a.length == 0 
+     wasEarlier
   }
   
     def updateView(nodes: Seq[Node]) = {

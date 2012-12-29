@@ -14,9 +14,9 @@ class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll 
   var errors = 0;
   val callback = {h: List[Node] => errors += 1}
   var modules = List(
-      new BasicCom[String](1, callback),
-      new BasicCom[String](2, callback),
-      new BasicCom[String](3, callback)
+      new NonReliableCom[String](1, callback),
+      new NonReliableCom[String](2, callback),
+      new NonReliableCom[String](3, callback)
       );
       
   val nodes = modules map {_.me}
@@ -24,7 +24,7 @@ class testComModule extends FunSuite with BeforeAndAfter with BeforeAndAfterAll 
   modules.foreach({
     module => registry.rebind(
         module.me.id.toString,
-        UnicastRemoteObject.exportObject(module,0));
+        UnicastRemoteObject.exportObject(module.asInstanceOf[Receiver],0));
   });
   
   before {
