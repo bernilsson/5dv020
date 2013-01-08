@@ -1,3 +1,2 @@
 object NameServer {
-  def main(args: Array[String]) = println("Name server says hi!")
-}
+  def main(args: Array[String]) = println("nameserver:main")}
