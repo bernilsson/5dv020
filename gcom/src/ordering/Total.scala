@@ -23,10 +23,9 @@ class Total(callbck : Message => Unit, nextOrder : () => Int) extends Ordering(c
        * By sorting and zipping each message with its number we can 
        * then group the holdback by the messages that are in order 
       */
-      val msgsWithNum = (totalMsg :: holdBack).sortBy(_.order) zipWithIndex
-      val stepTwo = msgsWithNum.map(a => (a._1,a._2+order))
+      val zippedWithIndex = (totalMsg :: holdBack).sortBy(_.order) zipWithIndex
       //GroupBy returns a map Boolean -> Result
-      val consecMap = stepTwo.groupBy(tuple => tuple match {
+      val consecMap = shiftIndex(zippedWithIndex, order).groupBy(tuple => tuple match {
         case (m, mOrder) => m.order == mOrder;
       })
       
@@ -43,6 +42,11 @@ class Total(callbck : Message => Unit, nextOrder : () => Int) extends Ordering(c
     case msg: Message => callback(msg)
     } 
   }
+  
+  private def shiftIndex(list: List[(TotalMessage, Int)], amount: Int) = {
+    list.map(a => (a._1,a._2+amount))
+  }
+  
   def createMessage(msg: Message) = TotalMessage( nextOrder(), msg )
 }
 
