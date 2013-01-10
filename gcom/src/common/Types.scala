@@ -32,3 +32,11 @@ sealed abstract class Message {
 case class TestMessage(content : String) extends Message;
 /** On receiving this, die immediately. */
 case class BlackSpot() extends Message;
+
+
+
+
+
+
+
+case class CausalMessage(clock: Vector[Int], msg: Message) extends Message
