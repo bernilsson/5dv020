@@ -1,4 +1,4 @@
-name := "GCom"
+name := "5dv020-lab2"
 
 version := "0.1"
 
