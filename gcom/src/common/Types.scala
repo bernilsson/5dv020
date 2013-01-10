@@ -32,3 +32,10 @@ sealed abstract class Message {
 case class TestMessage(content : String) extends Message;
 /** On receiving this, die immediately. */
 case class BlackSpot() extends Message;
+
+
+
+
+
+
+case class FIFOMessage(seq: Int,msg: Message) extends Message
