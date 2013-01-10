@@ -1,7 +1,7 @@
 package gcom.ordering;
 
-import gcom.common.Message
-import gcom.communication.Communication
+import gcom.common.Message;
+import gcom.communication.Communication;
 import gcom.transport.Transport;
 import gcom.common.NoOrdering
 
