@@ -38,7 +38,6 @@ class Total(callbck : Message => Unit, nextOrder : () => Int) extends Ordering(c
       
       
     }
-    case TotalOrderUpdate(newOrder) => order = newOrder;
     case msg: Message => callback(msg)
     } 
   }
@@ -46,7 +45,8 @@ class Total(callbck : Message => Unit, nextOrder : () => Int) extends Ordering(c
   private def shiftIndex(list: List[(TotalMessage, Int)], amount: Int) = {
     list.map(a => (a._1,a._2+amount))
   }
-  
+
+  def updateView(order: Int) = this.order = order
   def createMessage(msg: Message) = TotalMessage( nextOrder(), msg )
 }
 
