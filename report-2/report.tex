@@ -69,9 +69,164 @@
 \setcounter{section}{-1}
 
 \section{Introduction}
-TODO
 
-\section{Everything Else}
-TODO
+The purpose of this assignment was to design and implement GCom, a middleware for
+group communication. Middleware is a software layer that provides a high-level
+interface to some functionality and frees the user from worrying about how said
+functionality is implemented. Group communication is a mode of communication
+that allows a set of nodes distributed over network to form groups and broadcast
+messages to all members of the groups they belong to.
+
+This is the final report, written at the completion stage.
+
+\section{User's Guide}
+
+The executable files can be found on the department's computer systems, in the
+directory \texttt{/c/c05/c05mgv/5dv020}. The source code for the assignment can
+be found on GitHub under the address
+\texttt{https://github.com/23Skidoo/5dv020}.
+
+To run the name server, use the following command:
+\begin{center}\texttt{gcom-nameserver [-p PORT]}\end{center}
+
+The name server expects an RMI registry to be running on local host on the port
+\texttt{PORT}.
+
+To run the combined test/debugging application, use the following command:
+\begin{center}\texttt{gcom-client -p PORT -c RELIABILITY -o ORDERING NAMESERVER COMMAND}\end{center}
+
+Here, \texttt{NAMESERVER} is the address of the name server in the form of a
+\texttt{name:host:port} triple, and the \texttt{COMMAND} parameter is one of
+\texttt{list}, \texttt{kill NAME} or \texttt{join NAME}. The first command lists
+the available groups, the second sends a ``kill'' message to the given group,
+and the third joins a given group and starts the graphical interface. The
+\texttt{-c} option sets the reliability mode (one of \texttt{\{reliable,
+  unreliable\}}), and the \texttt{-o} option sets the ordering mode (one of
+\texttt{\{unordered, fifo, causal, total, causaltotal\}}). The \texttt{-p}
+option has the same meaning as for the name server.
+
+\section{Requirements Specification}
+
+This assignment is divided into three levels - the obligatory basic level and
+two bonus levels that give additional points. Our solution implements the Level
+2 specificaton (basic level + dynamic groups).
+
+The GCom middleware consists of three logical modules: communication, message
+ordering and group management. Additionally, we are required to implement a GUI
+test application for showcasing the features of the GCom middleware and a GUI
+debug application for demonstrating that it works correctly.
+
+The communication module supports two operations: basic non-reliable multicast
+and basic reliable multicast. The type of multicast and the message type are set
+at module initialisation time, so only a single send operation is accessible at
+runtime. This operation takes a set of node identifiers and a message as input,
+and blocks until the message has been placed into the incoming message queues of
+all of the recipients (it is synchronous in this sense). The communication
+module also allows to register callbacks for acting upon a message delivered to
+the current node -- this is used to pass control to the next layer of code.
+
+The message ordering module is built on top of the communication module. It
+allows to deliver messages according to several different orderings. The
+following orderings are supported: non-ordered, FIFO, causal, total and
+causal-total (described in more detail in the assignment specification and in
+the textbook\cite{Textbook}). Again, the type of ordering is set at module
+initialisation time. The same callback mechanism for passing control to the next
+layer is used here.
+
+The group management module is the user-facing part of the system implemented on
+top of the previous two modules. It allows to create and remove groups, add and
+remove group members, handles the monitoring of live nodes, keeps track of
+changes in group membership, and allows to list the names of all existing
+groups.
+
+The test program is a simple distributed GUI chat program in which each chat
+client instance is a node of the distributed system. It is combined
+
+The debug application is implemented as a special client for the aforementioned
+chat system that allows to watch the inner workings of the middleware. It has
+the following features:
+\begin{itemize}
+\item Simulated packet loss (send a message to a part of the group).
+\item Simulated packet rearrangement (send several messages in random order to
+  different nodes).
+\item Simulated packet delay (broadcast a message, but delay dispatching to some
+  nodes).
+\item Creation of a group with a chosen message ordering and multicast type.
+\item Display of the internal state of the system (such as message queues).
+\item Measurement of system performance.
+\end{itemize}
+
+\section{Design}
+
+We decided to implement our system in Scala and use Java RMI through Scala
+interop for communication between nodes. The choice of Scala was motivated by
+the desire to use a language that is more modern and convenient than Java, but
+still allows to run on JVM. Java RMI was chosen because it was the default
+option (recommended in the assignment specification) and we felt that other
+messaging solutions that we looked at either didn't provide any benefit for our
+use case (Finagle) or did all the required work for us (ZeroMQ).
+
+The communication module is just a straightforward implementation of the
+textbook algorithms for reliable and unreliable multicast\cite{Textbook}. The
+same can be said about the message ordering module: FIFO ordering will be
+implemented with logical timestamps, vector clocks will be used for the causal
+ordering, total ordering will be implemented with a sequencer node (specified as
+one of the inputs to the send function), and causal-total is just a combination
+of causal and total.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=12cm]{graph1}
+\caption{Group management module.}
+\label{fig:group}
+\end{figure}
+
+The group management module has a slightly more complicated design. Each node is
+identified by a (host, port number, name) triple. A group is identified by its
+name; names are globally unique, which is enforced by the name server that also
+associates an ID of a coordinator node with each group name. The central server
+is used a hub through each new nodes can discover and join existing groups.
+
+The coordinator node in each group serves as a message sequencer and gateway
+through which new nodes join the group. The process of joining a group is
+illustrated in figure~\ref{fig:group}. A node first contacts the central server,
+which knows the names of all groups and all coordinator nodes. When a node has
+chosen which group it wants to join, it contacts the coordinator for that group
+and receives the list of all group members. The group members then synchronise
+its view of group membership and the node is considered admitted.
+
+If the coordinator node dies or leaves the group, a new coordinator is elected,
+and all group members and the central server are notified. The 2-phase commit
+protocol is used to ensure that all nodes have a consistent view of group
+membership, group coordinator and the value of the total ordering
+counter. Originally, we planned to use Paxos, but that turned out to be too
+onerous to implement, and 2PC was fine for our purposes (fail-stop failure
+model). Since the focus of this assignment is on multicast and message ordering,
+we feel fine with a simplified solution.
+
+In case a group gets partitioned, each partition will elect a new coordinator
+and will continue to function independently. The ones that can't contact the
+central server will know that they are the ones ``left behind''. They can choose
+to either shut down, continue to communicate among themselves or wait for the
+central server to become available and try to rejoin the group.
+
+The system is designed to scale fairly well, since at no point there is a need
+to communicate with or store the names of all nodes in the system. Each node
+communicates only with the members of the groups it belongs to, and the central
+server communicates only with the coordinator nodes. The central server is
+obviously a single point of failure, but the groups don't depend on it to
+function and we believe that a central group catalog is needed in any case so
+that new nodes can discover what groups exist in the system.
+
+\pagebreak
+
+\begin{thebibliography}{9}
+
+\bibitem{Textbook} \emph{Distributed Systems}\\
+\newblock George Coulouris, Jean Dollimore, Tim Kindberg and Gordon Blair\\
+\newblock Addison-Wesley, 2011\\
+
+\end{thebibliography}
+
 
 \end{document}
