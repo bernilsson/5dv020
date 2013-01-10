@@ -15,6 +15,7 @@ import gcom.common.TotalMessage
 class Total(callbck : Message => Unit, nextOrder : () => Int) extends Ordering(callbck) {
   var order = 0;
   var holdBack = List[TotalMessage]();
+  private var getNextOrder = nextOrder;
   def receiveMessage(msg : Message) { msg match{
     case totalMsg: TotalMessage => {
       /*
@@ -47,7 +48,8 @@ class Total(callbck : Message => Unit, nextOrder : () => Int) extends Ordering(c
   }
 
   def updateView(order: Int) = this.order = order
-  def createMessage(msg: Message) = TotalMessage( nextOrder(), msg )
+  def createMessage(msg: Message) = TotalMessage( getNextOrder(), msg )
+  def setOrderCallback( callback: () => Int ) = getNextOrder = callback;
 }
 
 object Total {
