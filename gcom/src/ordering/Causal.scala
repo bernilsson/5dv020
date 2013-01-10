@@ -3,6 +3,7 @@ package gcom.ordering;
 import gcom.common.NodeID
 import gcom.common.Message
 import gcom.common.CausalMessage
+import gcom.communication.Communication
 
 
 class Causal(callbck: Message => Unit, me: NodeID) extends Ordering(callbck){
@@ -25,15 +26,17 @@ class Causal(callbck: Message => Unit, me: NodeID) extends Ordering(callbck){
     var changed = true;
     
     while(changed){
+      changed = false;
       holdBacks.foreach{ m =>
         val index = indexOf(m.senders.head);
-        changed = if(m.clock(index) == vectorClock(index) + 1 &&
+        if(m.clock(index) == vectorClock(index) + 1 &&
             earlierByOthers(index,vectorClock,m.clock)){
             callbck(m.msg);
+            holdBacks = holdBacks.filter(_ != m)
             vectorClock = vectorClock updated (index,vectorClock(index) + 1);
-            true
+            changed = true
           }
-          else false
+          
       };
     }
   }
@@ -42,7 +45,7 @@ class Causal(callbck: Message => Unit, me: NodeID) extends Ordering(callbck){
       index: Int, 
       myClock: Vector[Int], 
       otherClock: Vector[Int]): Boolean = {
-        val a = for(i <- 0 to myClock.length
+        val a = for(i <- 0 until myClock.length
           if(i != index && otherClock(i) > myClock(i))) yield{
             false;
           }
@@ -71,3 +74,10 @@ class Causal(callbck: Message => Unit, me: NodeID) extends Ordering(callbck){
   }
 }
 
+object Causal {
+  def create(t : Communication, callbck : Message => Unit, thisNode: NodeID) : Causal = {
+    val ord = new Causal(callbck,thisNode)
+    t.setOnReceive(ord.receiveMessage)
+    return ord
+  }
+}
