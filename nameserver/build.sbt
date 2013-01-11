@@ -15,3 +15,7 @@ libraryDependencies += "org.slf4j" % "slf4j-api" % "1.6.6"
 libraryDependencies += "ch.qos.logback" % "logback-core" % "1.0.7"
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.7"
+
+seq(com.github.retronym.SbtOneJar.oneJarSettings: _*)
+
+libraryDependencies += "commons-lang" % "commons-lang" % "2.6"

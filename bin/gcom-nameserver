@@ -1,0 +1,2 @@
+#!/bin/sh
+java -jar "`dirname $0`/nameserver_2.10-0.1-one-jar.jar" $@
