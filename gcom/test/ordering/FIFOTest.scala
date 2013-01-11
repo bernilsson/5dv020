@@ -1,4 +1,4 @@
-
+package test.ordering
 import org.scalatest._
 import scala.util.Random
 import gcom.common._
@@ -10,9 +10,9 @@ import gcom.ordering.FIFO
 
 
 class FIFOSpec extends FlatSpec {
-   
-    "FIFO ordering" should "deliver messages in" in {
-    val host     = Util.getLocalHostName
+    
+  "FIFO ordering" should "order messages from each sender" in {
+    val host     = "localhost" //Util.getLocalHostName
     val port     = 31337
     val name     = Util.getRandomUUID
     val id       = new NodeID(name, host, port)
@@ -21,21 +21,34 @@ class FIFOSpec extends FlatSpec {
     val registry = LocateRegistry.getRegistry(port)
 
     var message : Message  = TestMessage.create("BOGUS");
+    var receivedMessages = List[(NodeID,Int)]();
 
     val logger        = LoggerFactory.getLogger(id.toString)
     val transport     = BasicTransport.create(id, {msg =>}, logger);
     val communication = NonReliable.create(transport, {msg =>})
-    val ordering      = FIFO.create(communication, {msg => message = msg})
+    val ordering      = FIFO.create(communication, {msg => 
+      receivedMessages = receivedMessages :+ (msg.senders.head -> msg.payload.toInt)
+      })
     val thread        = new Thread(transport);
     thread.start();
+    val a = NodeID.fromString("1:a:1")
+    val b = NodeID.fromString("1:b:1")
+    val c = NodeID.fromString("1:c:1")
     
-    ordering.updateView(List((id,0), (NodeID.fromString("1:1:1"),0),(NodeID.fromString("1:2:1"),0)))
+    ordering.updateView(List( (a,1), (b,1), (c,1)))
+    
+    // c:1 a:3 a:2 b:1 a:1 b:2 c:2 should result in c:1 b:1 a:1-3 b:2 c:2 
+    val outboundOrder = List(c -> 1, a -> 3, a -> 2, b -> 1, a -> 1, b -> 2, c -> 2);
+    val expectedOrder = List(c -> 1, b -> 1, a -> 1, a-> 2, a -> 3, b -> 2, c -> 2)
+    outboundOrder.map({ m => 
+      val testm = TestMessage.create(""+m._2, new FIFOMessage(m._2));
+      testm.addSender(m._1)
+      transport.receiveMessage(testm)
+    })
+    
 
-    val msg = "TEST"
-    
-    ordering.sendToAll(List(id), msg)
     Thread.sleep(1000)
-    assert(msg === message.payload)
+    assert(receivedMessages === expectedOrder)
 
     transport.receiveMessage(new BlackSpot())
   }

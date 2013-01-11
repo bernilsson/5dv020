@@ -25,6 +25,7 @@ object NodeID {
 /** Used for testing. */
 object TestMessage{
   def create(payload: String) = Message(UnreliableMessage(), NoOrdering(), payload);
+  def create(payload: String, ordering: MessageOrdering) = Message(UnreliableMessage(), ordering, payload);
 }
 /** On receiving this, die immediately. */
 case class BlackSpot() extends AbstractMessage;
