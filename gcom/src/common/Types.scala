@@ -34,6 +34,7 @@ sealed abstract class MessageOrdering;
 case class NoOrdering() extends MessageOrdering;
 case class CausalMessage(clock: Vector[Int]) extends MessageOrdering
 case class FIFOMessage(seq: Int) extends MessageOrdering
+case class TotalOrdering(order: Int) extends MessageOrdering
 
 sealed abstract class Reliability;
 case class UnreliableMessage() extends Reliability;

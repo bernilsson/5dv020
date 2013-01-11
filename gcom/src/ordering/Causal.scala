@@ -17,6 +17,7 @@ class Causal(c: Communication, callbck: Message => Unit, me: NodeID) extends Ord
   def receiveMessage(msg: Message){
     msg match {
       case Message(_, cm : CausalMessage, _) => handle_message(msg, cm);
+      case msg: Message => callback(msg)
     }
   }
   
@@ -31,7 +32,7 @@ class Causal(c: Communication, callbck: Message => Unit, me: NodeID) extends Ord
         if(cm.clock(index) == vectorClock(index) + 1 &&
             earlierByOthers(index,vectorClock,cm.clock)){
         	println("deliver", m);
-            callbck(m);
+            callback(m);
             holdBacks = holdBacks.filter(_ != m)
             vectorClock = vectorClock updated (index,vectorClock(index) + 1);
             changed = true
