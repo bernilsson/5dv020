@@ -4,6 +4,9 @@ import gcom.common.Message
 import gcom.communication.Communication
 import gcom.transport.Transport
 import gcom.common.TotalOrdering
+import scala.swing.Publisher
+import scala.swing.event.Event
+
 
 
 /**
@@ -12,7 +15,7 @@ import gcom.common.TotalOrdering
  */
 class Total(c: Communication, callbck : Message => Unit, nextOrder : () => Int) extends Ordering(c, callbck) {
   var order = 0;
-  var holdBack = List[(Message, TotalOrdering)]();
+  var holdBacks = List[(Message, TotalOrdering)]();
   private var getNextOrder = nextOrder;
   def receiveMessage(msg : Message) { msg match{
     case Message(_,totalMsg: TotalOrdering,_) => {
@@ -22,13 +25,13 @@ class Total(c: Communication, callbck : Message => Unit, nextOrder : () => Int) 
        * By sorting and zipping each message with its number we can 
        * then group the holdback by the messages that are in order 
       */
-      val zippedWithIndex = ((msg,totalMsg) :: holdBack).sortBy(_._2.order) zipWithIndex
+      val zippedWithIndex = ((msg,totalMsg) :: holdBacks).sortBy(_._2.order) zipWithIndex
       //GroupBy returns a map Boolean -> Result
       val consecMap = shiftIndex(zippedWithIndex, order).groupBy(t => t match {
         case ((m,msgOrder), mOrder) => msgOrder.order == mOrder;
       })
       
-      holdBack = consecMap.get(false).getOrElse(List()).map(_._1)
+      holdBacks = consecMap.get(false).getOrElse(List()).map(_._1)
       consecMap.get(true).getOrElse(List()).foreach({ case ((msg,_),_) =>
         callbck(msg)
         order = order + 1
@@ -55,4 +58,5 @@ object Total {
     t.setOnReceive(ord.receiveMessage)
     return ord
   }
+
 }
