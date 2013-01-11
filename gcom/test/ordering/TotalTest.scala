@@ -25,7 +25,7 @@ class TotalSpec extends FlatSpec {
     val registry = LocateRegistry.getRegistry(port)
 
     var receivedList: List[Message] = List()
-    var sentMessages: List[Message] = List()
+    var sentMessages: List[String] = List()
     val shuffled = Random.shuffle((0 to 10))
     
     var order = 0;
@@ -33,19 +33,19 @@ class TotalSpec extends FlatSpec {
     val logger        = LoggerFactory.getLogger(id.toString)
     val transport     = BasicTransport.create(id, {msg =>}, logger);
     val communication = NonReliable.create(transport, {msg =>})
-    val ordering      = Total.create(communication, {msg => receivedList = receivedList :+ msg }, {() => order+=1; shuffled(order-1)})
+    val ordering      = Total.create(communication, {msg => receivedList = receivedList :+ msg }, 
+                                                    {() => order+=1; order-1})
     val thread        = new Thread(transport);
     thread.start();
     
     
     for(i <- shuffled){
-    	val msg = new TestMessage(""+ i)
-    	sentMessages = msg :: sentMessages
-    	transport.receiveMessage(msg)
+    	val msg = ""+ i
+    	sentMessages = sentMessages :+ msg
+    	ordering.sendToAll(List(id), msg)
     }
     Thread.sleep(1000)
-    assert(receivedList === sentMessages.
-        sortBy(_.asInstanceOf[TestMessage].content.toInt) )
+    assert(receivedList.map(_.payload) === sentMessages)
 
     transport.receiveMessage(new BlackSpot())
   }
