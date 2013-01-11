@@ -15,7 +15,7 @@ import gcom.common._
  *  RMI. Made abstract to allow different implementations. Runnable because
  *  it's the part that drives the whole system through callbacks. */
 trait Transport extends Remote with Runnable {
-
+  val nodeID: NodeID
   /** Send a message to the given destination. Return Some[dst] in case of
    *  success, and None on error. */
   @throws(classOf[RemoteException])

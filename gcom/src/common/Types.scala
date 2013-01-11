@@ -24,7 +24,7 @@ object NodeID {
 
 /** Used for testing. */
 object TestMessage{
-  def create(payload: String) = Message(Unreliable(), NoOrdering(), payload);
+  def create(payload: String) = Message(UnreliableMessage(), NoOrdering(), payload);
 }
 /** On receiving this, die immediately. */
 case class BlackSpot() extends AbstractMessage;
@@ -35,8 +35,8 @@ case class CausalMessage(clock: Vector[Int]) extends MessageOrdering
 case class FIFOMessage(seq: Int) extends MessageOrdering
 
 sealed abstract class Reliability;
-case class Unreliable() extends Reliability;
-
+case class UnreliableMessage() extends Reliability;
+case class ReliableMessage(seq: Int) extends Reliability;
 
 sealed abstract class AbstractMessage extends Serializable {
   var senders = List[NodeID]();

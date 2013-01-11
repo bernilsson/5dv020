@@ -8,7 +8,7 @@ class NonReliable(t : Transport, callbck : Message => Unit)
   def sendToAll(dsts : List[NodeID], payload: String, ordering: MessageOrdering) : List[NodeID] = {
     var retList = List[NodeID]()
     dsts.foreach { dst =>
-      val mid = transport.sendMessage(dst, Message(Unreliable(),ordering,payload))
+      val mid = transport.sendMessage(dst, Message(UnreliableMessage(),ordering,payload))
       retList = mid.map({ id => id :: retList}).getOrElse(retList)
     }
     return retList
