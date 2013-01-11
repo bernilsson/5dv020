@@ -32,6 +32,7 @@ case class BlackSpot() extends AbstractMessage;
 sealed abstract class MessageOrdering;
 case class NoOrdering() extends MessageOrdering;
 case class CausalMessage(clock: Vector[Int]) extends MessageOrdering
+case class FIFOMessage(seq: Int) extends MessageOrdering
 
 sealed abstract class Reliability;
 case class Unreliable() extends Reliability;
@@ -50,5 +51,8 @@ case class Message(reliability : Reliability,
 /* may add other types of messages to be used by the transport layer,
  * e.g. Ping/Pong/DieImmediately
  */
+
+
+
 
 
