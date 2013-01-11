@@ -3,14 +3,15 @@ package gcom.ordering;
 import gcom.common.Message
 import gcom.communication.Communication
 import gcom.common.NodeID
+import gcom.common.MessageOrdering
 
 abstract class Ordering (c: Communication, callbck : Message => Unit) {
   var callback = callbck
   val communicator = c;
   def setOnReceive(callbck : Message => Unit) = callback = callbck
   def receiveMessage(msg : Message) : Unit
-  def sendToAll(dst: List[NodeID],msg: Message) : Unit = {
-    communicator.sendToAll(dst, createMessage(msg))
+  def sendToAll(dst: List[NodeID],payload: String) : Unit = {
+    communicator.sendToAll(dst, payload,createOrdering())
   }
-  protected def createMessage(msg : Message) : Message
+  protected def createOrdering() : MessageOrdering
 }

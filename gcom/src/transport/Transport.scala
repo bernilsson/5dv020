@@ -19,12 +19,12 @@ trait Transport extends Remote with Runnable {
   /** Send a message to the given destination. Return Some[dst] in case of
    *  success, and None on error. */
   @throws(classOf[RemoteException])
-  def sendMessage(to : NodeID, msg : Message) : Option[NodeID];
+  def sendMessage(to : NodeID, msg : AbstractMessage) : Option[NodeID];
 
   /** Used by remote clients to post messages to the transport's
    *  internal queue. */
   @throws(classOf[RemoteException])
-  def receiveMessage(msg : Message) : Unit;
+  def receiveMessage(msg : AbstractMessage) : Unit;
 
   /** Change the callback invoked when a message is received. */
   @throws(classOf[RemoteException])
@@ -41,7 +41,7 @@ class BasicTransport(id : NodeID,
   val nodeID     = id;
   var callback   = callbck;
   val logger     = loggr;
-  val queue      = new LinkedBlockingQueue[Message]();
+  val queue      = new LinkedBlockingQueue[AbstractMessage]();
   val registries = new HashMap[(String, Int), Registry]();
   val stubs      = new HashMap[NodeID, Transport]();
 
@@ -77,12 +77,12 @@ class BasicTransport(id : NodeID,
 
   def setOnReceive(callbck : Message => Unit) = callback = callbck
 
-  def receiveMessage(msg : Message) = {
+  def receiveMessage(msg : AbstractMessage) = {
     queue.put(msg);
     logger.debug("Message received: " + msg.toString)
   }
 
-  def sendMessage(dst : NodeID, msg : Message) : Option[NodeID] = {
+  def sendMessage(dst : NodeID, msg : AbstractMessage) : Option[NodeID] = {
     try {
       msg.addSender(nodeID)
       val mstub = locateStub(dst)
@@ -102,8 +102,8 @@ class BasicTransport(id : NodeID,
     while (true) {
       val msg = queue.take();
       msg match {
-        case BlackSpot() => return;
-        case _           => callback(msg);
+        case BlackSpot()   => return;
+        case msg : Message => callback(msg);
       }
     }
   }

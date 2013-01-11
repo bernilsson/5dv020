@@ -21,14 +21,31 @@ object NodeID {
   }
 }
 
-/** The message ADT. Lists all possible types of messages. */
-sealed abstract class Message {
+
+/** Used for testing. */
+object TestMessage{
+  def apply(payload: String) = Message(Unreliable(), NoOrdering(), payload);
+}
+/** On receiving this, die immediately. */
+case class BlackSpot() extends AbstractMessage;
+
+sealed abstract class MessageOrdering;
+case class NoOrdering() extends MessageOrdering;
+
+
+sealed abstract class Reliability;
+case class Unreliable() extends Reliability;
+
+
+sealed abstract class AbstractMessage {
   var senders = List[NodeID]();
 
   def getSenders() : List[NodeID] = senders;
   def addSender(n : NodeID) : Unit = senders = n +: senders;
 }
-/** Used for testing. */
-case class TestMessage(content : String) extends Message;
-/** On receiving this, die immediately. */
-case class BlackSpot() extends Message;
+case class Message(reliability : Reliability, 
+                     ordering : MessageOrdering,
+                     payload : String) extends AbstractMessage
+/* may add other types of messages to be used by the transport layer,
+ * e.g. Ping/Pong/DieImmediately
+ */

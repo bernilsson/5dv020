@@ -20,16 +20,16 @@ class NonOrderedSpec extends FlatSpec {
     /* Registry must be running. */
     val registry = LocateRegistry.getRegistry(port)
 
-    var message : Message  = new TestMessage("BOGUS");
+    var message  = "BOGUS";
 
     val logger        = LoggerFactory.getLogger(id.toString)
     val transport     = BasicTransport.create(id, {msg =>}, logger);
     val communication = NonReliable.create(transport, {msg =>})
-    val ordering      = NonOrdered.create(communication, {msg => message = msg})
+    val ordering      = NonOrdered.create(communication, {msg => message = msg.payload})
     val thread        = new Thread(transport);
     thread.start();
 
-    val msg = new TestMessage("TEST")
+    val msg = "TEST"
     ordering.sendToAll(List(id), msg)
     Thread.sleep(1000)
     assert(msg == message)
