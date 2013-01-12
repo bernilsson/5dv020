@@ -63,8 +63,12 @@ class CausalSpec extends FlatSpec {
         clock.productElement(1)+"b"
       } else clock.productElement(2)+"c"
 
-      val testm = TestMessage.create(payload.toString, 
-                                     new CausalMessage(Map(a -> clock._1, b -> clock._2, c -> clock._3)));
+      val testm = TestMessage.create(
+          payload.toString, new CausalMessage(
+              Map(a -> clock._1,
+                  b -> clock._2,
+                  c -> clock._3)
+           ));
       testm.addSender(node)
       transport.receiveMessage(testm)
     })
