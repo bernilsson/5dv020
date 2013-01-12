@@ -5,8 +5,11 @@ import gcom.common.Message
 import gcom.common.CausalMessage
 import gcom.communication.Communication
 
-
-class Causal(c: Communication, callbck: Message => Unit, me: NodeID) extends Ordering(c, callbck){
+class Causal(
+      c: Communication, 
+      callbck: Message => Unit,
+      me: NodeID) 
+    extends Ordering(c, callbck){
   
   private var vectorClock = Map[NodeID,Int]();
   private var holdBacks = List[(Message, CausalMessage)]();
