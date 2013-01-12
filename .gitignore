@@ -1,6 +1,15 @@
+/gcom/.cache
+/gcom/.classpath
+/client/.classpath
+/nameserver/.classpath
+project/
 target/
 *.aux
 *.log
 *.out
 *.pdf
 *.jar
+.project
+/.cache
+/.classpath
+.settings/

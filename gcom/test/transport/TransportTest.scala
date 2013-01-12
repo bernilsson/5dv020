@@ -19,7 +19,7 @@ class TransportSpec extends FlatSpec {
     /* Registry must be running. */
     val registry = LocateRegistry.getRegistry(port)
 
-    var message : Message  = new TestMessage("BOGUS");
+    var message : Message  = TestMessage.create("BOGUS");
 
     val t1logger = LoggerFactory.getLogger(t1id.toString)
     val t2logger = LoggerFactory.getLogger(t2id.toString)
@@ -31,9 +31,10 @@ class TransportSpec extends FlatSpec {
     t1thread.start();
     t2thread.start();
 
-    val msg = new TestMessage("TEST")
+    val msg = TestMessage.create("TEST")
     t1.sendMessage(t2id, msg)
     Thread.sleep(1000)
+    assert(message.senders === List(t1id))
     assert(msg == message)
 
     t1.receiveMessage(new BlackSpot())
