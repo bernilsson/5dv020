@@ -16,7 +16,7 @@ class Causal(
 
   private var clock = 0;
   private val myAddr = me;
-
+  
   def receiveMessage(msg: Message){
     msg match {
       case Message(_, cm : CausalData, _) => handle_message(msg, cm);
@@ -27,7 +27,7 @@ class Causal(
   private def handle_message(newM: Message, newCm: CausalData){
     holdBacks = (newM, newCm) :: holdBacks
     var changed = true;
-
+    
     while(changed){
       changed = false;
       holdBacks.foreach{ case (m, cm) =>
@@ -39,7 +39,7 @@ class Causal(
             vectorClock = vectorClock + (from -> (vectorClock(from) + 1));
             changed = true
           }
-
+          
       };
     }
   }
