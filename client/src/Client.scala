@@ -17,7 +17,7 @@ object Client {
 
   val portopt = parser.option[Int](List("p", "port"), "n", "port number")
 
-  val commopt = parser.option[MulticastType](
+  val reliablopt = parser.option[MulticastType](
     List("c", "communication"),
     "[reliable|unreliable]", "communication type") { (s, opt) =>
     s match {
@@ -54,7 +54,7 @@ object Client {
   /* Values of the parsed options. */
   /* gcom-client -p PORT -c RELIABILITY -o ORDERING NAMESERVER COMMAND */
   lazy val port = portopt.value.getOrElse(31337)
-  lazy val comm = commopt.value.getOrElse(UnreliableMulticast())
+  lazy val reliability = reliablopt.value.getOrElse(UnreliableMulticast())
   lazy val ordering = ordopt.value.getOrElse(NoOrdering())
   lazy val nameserver = nameserveropt.value.getOrElse(
     NodeID.fromString("nameserver:localhost:31337"))
@@ -69,13 +69,32 @@ object Client {
     try {
       parser.parse(args)
       println("Port: " + port.toString)
-      println("Multicast type: " + comm.toString)
+      println("Multicast type: " + reliability.toString)
       println("Ordering type: " + ordering.toString)
       println("Nameserver: " + nameserver.toString)
       println("Command: " + command.toString)
+      command match {
+        case CommandList()          => commandList()
+        case CommandKill(groupName) =>
+          commandKill(Group(groupName, reliability, ordering))
+        case CommandJoin(groupName) =>
+          commandJoin(Group(groupName, reliability, ordering))
+      }
     }
     catch {
       case e: ArgotUsageException => println(e.message)
     }
+  }
+
+  def commandList() : Unit = {
+    println("not implemented")
+  }
+
+  def commandJoin(group : Group) = {
+    println("not implemented")
+  }
+
+  def commandKill(group : Group) = {
+    println("not implemented")
   }
 }
