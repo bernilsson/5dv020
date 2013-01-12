@@ -6,32 +6,15 @@ import com.sun.java.swing.plaf.gtk.GTKLookAndFeel
 import javax.swing.{UIManager}
 import java.awt.GridBagConstraints
 import java.awt.GridBagConstraints
-/*
-class DummyCommunicator(callBack: String => Unit){
-  def broadCastMsg(msg: String){
-      callBack(msg);
-  }
-  def leaveGroup() = {println( "Leaving" )}
-}
+import gcom.common.Message
+import gcom.Group
 
-object DummyNameServer{
-  def joinGroup(g: JoinGroup, onRecv: String => Unit) = {
-    new Thread(new Runnable{
-      def run(){
-        for(i <- 1 to 100){
-          onRecv("Hello " + i)
-          Thread.sleep(100);
-        }
-      }
-    }).start();
+
+//Move me somewhere sane
+case class UpdateQueue(name: String,list: List[Message]) extends Event
+case class UpdateSentMessages(num: Double) extends Event
     
-    new DummyCommunicator(onRecv);
-  }
-  def listGroups(): List[Group] = {
-    List(Group("Group1", Reliable(),FIFO()), Group("Group2", NonReliable(),Total()));
-  }
-}
-*/
+
 object DebugGui extends SimpleSwingApplication {
   
   //initialize NameServer
@@ -49,7 +32,7 @@ object DebugGui extends SimpleSwingApplication {
     val s = showInput[Group](buttons,
       "Select a server",
       "Server Selection",
-      Message.Plain,
+      swing.Dialog.Message.Plain,
       Swing.EmptyIcon,
       possibilities, null)
    
@@ -58,7 +41,7 @@ object DebugGui extends SimpleSwingApplication {
     }
       
     val com = DummyNameServer.joinGroup(
-        ExistingGroup(s.get.groupName),
+        s.get,
         { msg =>
           
           chatBox.append("\n" + msg)
@@ -110,7 +93,7 @@ object DebugGui extends SimpleSwingApplication {
               case e: NumberFormatException => 
                 0
             }
-          com.broadCastMsg(chatInput.text)
+          com.broadcastMessage(chatInput.text)
       }
       
     }
@@ -188,8 +171,6 @@ object DebugGui extends SimpleSwingApplication {
     
     }
     
-    case class UpdateQueue(name: String,list: List[Message]) extends Event
-    case class UpdateSentMessages(num: Double) extends Event
     
     listenTo(queueList.selection)
     reactions += {
