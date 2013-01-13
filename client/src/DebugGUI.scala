@@ -6,8 +6,14 @@ import com.sun.java.swing.plaf.gtk.GTKLookAndFeel
 import javax.swing.{UIManager}
 import java.awt.GridBagConstraints
 import java.awt.GridBagConstraints
-import gcom.Group
 import gcom.common.Message
+import gcom.Group
+
+
+//Move me somewhere sane
+case class UpdateQueue(name: String,list: List[Message]) extends Event
+case class UpdateSentMessages(num: Double) extends Event
+    
 
 object DebugGui extends SimpleSwingApplication {
 
@@ -166,10 +172,8 @@ object DebugGui extends SimpleSwingApplication {
     }
 
     }
-
-    case class UpdateQueue(name: String,list: List[Message]) extends Event
-    case class UpdateSentMessages(num: Double) extends Event
-
+    
+   
     listenTo(queueList.selection)
     reactions += {
       case UpdateQueue(name, list) => {
