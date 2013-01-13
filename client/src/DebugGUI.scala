@@ -17,14 +17,15 @@ import gcom.ordering.Ordering
 /**
  * Provides 
  * top                    : Returns a mainframe with debugging GUI
- * sendFunction           : The function to execute when a message is received
  * showGroupSelectDialog  : Shows a dialog where the user can select a group
  */
-object DebugGui {
+class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends MainFrame {
 
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
 
+  communicator.setOnReceive(sendFunction(_))
+  
   var messageQueues = Map[String,List[String]]();
   var messageCounter = 0
   
@@ -64,10 +65,9 @@ object DebugGui {
               }
          );
   }
-  def top(t: Transport, o: Ordering, c: Communicator, group: Group) = new MainFrame {
-    title = "ChatGui " + group.toString
 
-    val com = c
+  
+    title = "ChatGui"
 
     object dropText extends Label("Delay: ")
     object dropInput extends CheckBox
@@ -196,7 +196,7 @@ object DebugGui {
           0
        }
        messageCounter = 0
-       com.broadcastMessage(chatInput.text)
+       communicator.broadcastMessage(chatInput.text)
     }
 
 
@@ -205,9 +205,9 @@ object DebugGui {
     }
 
     override def closeOperation(){
-      com.leaveGroup
+      communicator.leaveGroup
       super.closeOperation
     }
-  }
+  
 
 }
