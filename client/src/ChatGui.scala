@@ -8,13 +8,14 @@ import gcom.FIFOOrdering
 import gcom.ReliableMulticast
 import gcom.TotalOrdering
 import gcom.UnreliableMulticast
+import gcom.client._
 
 class DummyCommunicator(callBack: String => Unit) {
   def broadcastMessage(msg: String){
       callBack(msg);
   }
   def leaveGroup() = {println( "Leaving" )}
-  
+
 }
 
 object DummyNameServer {
@@ -34,15 +35,12 @@ object DummyNameServer {
     List(Group("Group1", ReliableMulticast(),FIFOOrdering()),
          Group("Group2", UnreliableMulticast(),TotalOrdering()));
   }
-  
-  
-  
 }
 
 object ChatGui extends SimpleSwingApplication {
 
   //initialize NameServer
-
+  //Client.parser.parse(args)
 
   def top = new MainFrame {
     title = "ChatGui"
@@ -55,7 +53,7 @@ object ChatGui extends SimpleSwingApplication {
     val s = showInput[Group](buttons,
       "Select a server",
       "Server Selection",
-      Message.Question,
+      Message.Question, 
       Swing.EmptyIcon,
       possibilities, null)
 
