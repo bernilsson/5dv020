@@ -25,7 +25,7 @@ class Causal(
       case msg: Message => callback(msg)
     }
     publish(UpdateQueue(
-        "Causal " + clock,
+        "Causal: " + clock,
         "Our clock " + vectorClock :: holdBacks map (_.toString) ))
   }
 
