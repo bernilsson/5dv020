@@ -1,16 +1,24 @@
+
 import swing._
 import swing.event._
 import java.awt.FlowLayout
+import gcom.NameServer
+import gcom.Group
+import gcom.Communicator
+import gcom.FIFOOrdering
+import gcom.ReliableMulticast
+import gcom.TotalOrdering
+import gcom.UnreliableMulticast
 
-class DummyCommunicator(callBack: String => Unit){
-  def broadCastMsg(msg: String){
+class DummyCommunicator(callBack: String => Unit) extends Communicator {
+  def broadcastMessage(msg: String){
       callBack(msg);
   }
   def leaveGroup() = {println( "Leaving" )}
 }
 
-object DummyNameServer{
-  def joinGroup(g: JoinGroup, onRecv: String => Unit) = {
+object DummyNameServer extends NameServer{
+  def joinGroup(g: Group, onRecv: String => Unit) = {
     new Thread(new Runnable{
       def run(){
         for(i <- 1 to 100){
@@ -19,13 +27,14 @@ object DummyNameServer{
         }
       }
     }).start();
-
+    
     new DummyCommunicator(onRecv);
   }
   def listGroups(): List[Group] = {
-    List(Group("Group1", Reliable(),FIFO()),
-         Group("Group2", NonReliable(),Total()));
+    List(Group("Group1", ReliableMulticast(),FIFOOrdering()),
+         Group("Group2", UnreliableMulticast(),TotalOrdering()));
   }
+  def killGroup(g: Group) = true
 }
 
 object ChatGui extends SimpleSwingApplication {
@@ -53,8 +62,8 @@ object ChatGui extends SimpleSwingApplication {
     }
 
     val com = DummyNameServer.joinGroup(
-        ExistingGroup(s.get.groupName),
-        { msg =>
+        s.get, 
+        { msg => 
           chatBox.append("\n" + msg)
           javax.swing.SwingUtilities.invokeLater(new Runnable() {
                   def run() {
@@ -78,29 +87,29 @@ object ChatGui extends SimpleSwingApplication {
     object chatInput extends TextField(30){
       horizontalAlignment = Alignment.Left;
     };
-
+    
     object nodeList extends ListView(List("Waiting for group info"))
-
+    
     object inputPanel extends FlowPanel{
       contents.append(chatInput, button);
     }
-
+    
     contents = new BoxPanel(Orientation.Vertical) {
       contents.append(new BoxPanel(Orientation.Horizontal){
-       contents.append(chatScroller, new ScrollPane(nodeList))
+       contents.append(chatScroller, new ScrollPane(nodeList)) 
       }, inputPanel)
       border = Swing.EmptyBorder(5, 5, 5, 5)
     }
-
+    
     listenTo(button)
     listenTo(chatInput)
     reactions += {
       case ButtonClicked(button) =>
-        com.broadCastMsg(chatInput.text)
+        com.broadcastMessage(chatInput.text)
       case EditDone(_) =>
-        com.broadCastMsg(chatInput.text)
+        com.broadcastMessage(chatInput.text)
     }
-
+      
     override def closeOperation(){
       com.leaveGroup
       super.closeOperation
@@ -108,3 +117,4 @@ object ChatGui extends SimpleSwingApplication {
   }
 
 }
+
