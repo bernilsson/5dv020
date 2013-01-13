@@ -10,6 +10,7 @@ import org.slf4j.Logger
 import scala.collection.mutable.HashMap;
 
 import gcom.common._
+import scala.swing.Publisher
 
 /** The message transport layer. The only part of the system that knows about
  *  RMI. Made abstract to allow different implementations. Runnable because
@@ -39,7 +40,8 @@ trait Transport extends Remote with Runnable {
 
 /** A basic transport layer implementation. */
 class BasicTransport(id : NodeID,
-                     callbck : Message => Unit, loggr : Logger) extends Transport
+                     callbck : Message => Unit, loggr : Logger) 
+                   extends Transport with Publisher
 {
   val nodeID     = id;
   var callback   = callbck;
@@ -93,6 +95,7 @@ class BasicTransport(id : NodeID,
         logger.debug("Sending message to: " + dst.toString)
         stub.receiveMessage(msg)
         logger.debug("Message sent: " + msg.toString)
+        publish(UpdateSentMessages(1))
         Some(dst)
       }
     }
