@@ -14,6 +14,7 @@ import gcom.transport._
 import gcom.Communicator
 import gcom.ordering.Ordering
 import gcom.communication.Communication
+import gcom.ordering.NonOrdered
 
 /**
  * Provides 
@@ -34,7 +35,7 @@ class DebugGui(
   listenTo(o)
   communicator.setOnReceive(sendFunction(_))
   
-  var messageQueues = Map[String,List[String]]();
+  var messageQueues = Map[Ordering,(String,List[String])]();
   var messageCounter = 0
   
   def showGroupSelectDialog(possibilities: List[Group]): Option[Group] = {
@@ -84,8 +85,8 @@ class DebugGui(
       columns = 3;
     }
 
-    object queueList extends ListView[String]{
-      listData = List("No queues...")
+    object queueList extends ListView[(String,Ordering)]{
+      listData = List()
     }
 
     object messageList extends ListView[String]{
@@ -172,9 +173,9 @@ class DebugGui(
 
     listenTo(queueList.selection)
     reactions += {
-      case UpdateQueue(name, list) => {
+      case UpdateQueue(key, header, list) => {
         val selection = queueList.selection.anchorIndex;
-        messageQueues += (name -> list)
+        messageQueues += (key -> (header, list))
         updateList();
         queueList.selectIndices(selection)
 
@@ -182,7 +183,7 @@ class DebugGui(
       // `` lets us match against that specific variable.
       case ListSelectionChanged(`queueList`,range,live) => {
         val key = queueList.listData(queueList.selection.anchorIndex)
-        messageList.listData = messageQueues.getOrElse(key, List())
+        messageList.listData = messageQueues.getOrElse(key._2, ( "", List() ) )._2
       }
       case UpdateSentMessages(num) => {
         messageCounter += 1

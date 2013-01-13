@@ -21,7 +21,7 @@ class FIFO(c: Communication, callbck: Message => Unit)
         ("" + node + " " + sequences(node)) :: list.map("" + _)
       } 
     })
-    publish(UpdateQueue("FIFO: " + curSeq, hold.flatten.toList))
+    publish(UpdateQueue(this,"FIFO: " + curSeq, hold.flatten.toList))
      
   }
 
