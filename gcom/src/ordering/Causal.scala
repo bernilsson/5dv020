@@ -2,32 +2,32 @@ package gcom.ordering;
 
 import gcom.common.NodeID
 import gcom.common.Message
-import gcom.common.CausalMessage
+import gcom.common.CausalData
 import gcom.communication.Communication
 
 class Causal(
-      c: Communication, 
+      c: Communication,
       callbck: Message => Unit,
-      me: NodeID) 
+      me: NodeID)
     extends Ordering(c, callbck){
-  
+
   private var vectorClock = Map[NodeID,Int]();
-  private var holdBacks = List[(Message, CausalMessage)]();
-  
+  private var holdBacks = List[(Message, CausalData)]();
+
   private var clock = 0;
   private val myAddr = me;
-  
+
   def receiveMessage(msg: Message){
     msg match {
-      case Message(_, cm : CausalMessage, _) => handle_message(msg, cm);
+      case Message(_, cm : CausalData, _) => handle_message(msg, cm);
       case msg: Message => callback(msg)
     }
   }
-  
-  private def handle_message(newM: Message, newCm: CausalMessage){
+
+  private def handle_message(newM: Message, newCm: CausalData){
     holdBacks = (newM, newCm) :: holdBacks
     var changed = true;
-    
+
     while(changed){
       changed = false;
       holdBacks.foreach{ case (m, cm) =>
@@ -39,47 +39,50 @@ class Causal(
             vectorClock = vectorClock + (from -> (vectorClock(from) + 1));
             changed = true
           }
-          
+
       };
     }
   }
 
   private def earlierByOthers(
-      from: NodeID, 
-      myClock: Map[NodeID, Int], 
+      from: NodeID,
+      myClock: Map[NodeID, Int],
       otherClock: Map[NodeID, Int]): Boolean = {
-    var earlier = true; 
+    var earlier = true;
     for((node, clock) <- myClock
       if(node != from && otherClock(node) > myClock(node))) {
          earlier = false;
     }
-     //If the above predicate was true for zero elements, it was earlier than others
-     earlier 
+     //If the above predicate was true for zero elements, it was earlier than
+     //others
+     earlier
   }
-  
-  /**
-   * @param nodes is a sequence of tuples containing nodes and their current clock
-   */
+
+  /** * @param nodes is a sequence of tuples containing nodes and their current
+  clock */
+
   def updateView(newClock: Map[NodeID, Int]) = {
     //Only remember messages from nodes in view
-    holdBacks = holdBacks.filter({case (m,cm) => newClock.contains(m.senders.head) })
+    holdBacks = holdBacks.filter({case (m,cm) =>
+                                  newClock.contains(m.senders.head) })
     //Remove clocks from messages
     holdBacks = holdBacks.map { case (m, cm) =>
       val clocks = cm.clock -- newClock.keySet
-      (m,CausalMessage(clocks))
+      (m,CausalData(clocks))
     }
     vectorClock = newClock
   }
-  
-  def createOrdering(): CausalMessage = {
+
+  def createOrdering(): CausalData = {
     val index = (me);
-    clock = clock + 1; 
-    CausalMessage(vectorClock + (index -> clock ));
+    clock = clock + 1;
+    CausalData(vectorClock + (index -> clock ));
   }
 }
 
 object Causal {
-  def create(t : Communication, callbck : Message => Unit, thisNode: NodeID) : Causal = {
+  def create(t : Communication,
+             callbck : Message => Unit, thisNode: NodeID) : Causal = {
     val ord = new Causal(t, callbck,thisNode)
     t.setOnReceive(ord.receiveMessage)
     return ord
