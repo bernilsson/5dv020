@@ -1,7 +1,6 @@
 import swing._
 import swing.event._
 import java.awt.FlowLayout
-import gcom.NameServer
 import gcom.Group
 import gcom.Communicator
 import gcom.FIFOOrdering
@@ -9,14 +8,15 @@ import gcom.ReliableMulticast
 import gcom.TotalOrdering
 import gcom.UnreliableMulticast
 
-class DummyCommunicator(callBack: String => Unit) extends Communicator {
+class DummyCommunicator(callBack: String => Unit) {
   def broadcastMessage(msg: String){
       callBack(msg);
   }
   def leaveGroup() = {println( "Leaving" )}
+  
 }
 
-object DummyNameServer extends NameServer{
+object DummyNameServer {
   def joinGroup(g: Group, onRecv: String => Unit) = {
     new Thread(new Runnable{
       def run(){
@@ -33,7 +33,9 @@ object DummyNameServer extends NameServer{
     List(Group("Group1", ReliableMulticast(),FIFOOrdering()),
          Group("Group2", UnreliableMulticast(),TotalOrdering()));
   }
-  def killGroup(g: Group) = true
+  
+  
+  
 }
 
 object ChatGui extends SimpleSwingApplication {
