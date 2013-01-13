@@ -10,6 +10,11 @@ import gcom._
 import gcom.common.NodeID
 import gcom.common.Util
 
+import gcom.Communicator
+import gcom.transport.Transport
+import gcom.communication.Communication
+import gcom.ordering.Ordering
+
 object Client {
 
   /* Option parsing. */
@@ -77,10 +82,9 @@ object Client {
   val logger = LoggerFactory.getLogger(name)
 
   // Assemble a Communicator to be passed to the GUI.
-  // TODO: Modify to also return Transport, Communication and Ordering so that
-  // they could be plugged into the debugging interface.
   def assembleCommunicator(nsrv : NameServer,
-                           leader : NodeID) : Communicator = {
+                           leader : NodeID)
+      : (Communicator, Transport, Communication, Ordering) = {
     val transport =
       gcom.transport.BasicTransport.create(nodeID, {msg =>}, logger)
     val comm =
@@ -109,7 +113,7 @@ object Client {
     val communicator =
       gcom.group.Group.create(nsrv, nodeID, leader, comm, ord, {msg =>})
 
-    return communicator
+    return (communicator, transport, comm, ord)
   }
 
   def main(args: Array[String]) = {
@@ -161,10 +165,11 @@ object Client {
         println("Group " + group.name + " does not exist!")
       }
       case Some(leader) => {
-        val comm = assembleCommunicator(nsrv, leader)
-        // TODO
-        // val gui = new gcom.client.gui.ChatGui(comm)
-        // gui.main(Array[String]())
+        val (communicator, transport, comm, ordering) =
+            assembleCommunicator(nsrv, leader)
+        // Calls communicator's setOnReceive
+        val gui = new gcom.client.gui.ChatGui(communicator)
+        gui.main(Array[String]())
       }
     }
   }
@@ -175,8 +180,8 @@ object Client {
         println("Group " + group.name + " does not exist!")
       }
       case Some(leader) => {
-        val comm = assembleCommunicator(nsrv, leader)
-        comm.killGroup()
+        val tuple = assembleCommunicator(nsrv, leader)
+        tuple._1.killGroup()
       }
     }
   }
