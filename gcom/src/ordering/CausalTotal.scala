@@ -3,12 +3,41 @@ package gcom.ordering;
 import gcom.communication.Communication
 import gcom.common.Message
 import gcom.common.NodeID
-import gcom.common.MessageOrdering
+import gcom.common.OrderingData
+import gcom.common.CausalTotalData
 
-class CausalTotal(c: Communication, callbck : Message => Unit, me: NodeID , nextOrder : () => Int) extends Ordering (c: Communication, callbck : Message => Unit) {
-  def receiveMessage(msg : Message) : Unit
-  def sendToAll(dst: List[NodeID],payload: String) : Unit = {
+class CausalTotal(
+    c: Communication,
+    callbck : Message => Unit,
+    thisNode: NodeID,
+    nextOrder : () => Int)
+  extends 
+    Ordering (c: Communication, callbck : Message => Unit) {
+  
+  val total =  Total.create(c, callback, nextOrder)
+  val causal = Causal.create(c, { total.receiveMessage(_) }, thisNode)
+  
+  def receiveMessage(msg : Message) = causal.receiveMessage _
+  
+  
+  override def sendToAll(dst: List[NodeID],payload: String) : Unit = {
     communicator.sendToAll(dst, payload,createOrdering())
   }
-  protected def createOrdering() : MessageOrdering
+  override protected def createOrdering() : OrderingData = {
+    val totalData = total.createOrdering
+    val causalData = causal.createOrdering
+    CausalTotalData(causalData.clock, totalData.order)
+  }
+}
+
+object CausalTotal {
+  def create(
+      t : Communication,
+      callbck : Message => Unit,
+      thisNode: NodeID,
+      nextOrder: () => Int ) : CausalTotal = {
+    val ord = new CausalTotal(t, callbck,thisNode, nextOrder)
+    t.setOnReceive(ord.receiveMessage)
+    return ord
+  }
 }
