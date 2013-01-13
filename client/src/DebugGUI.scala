@@ -10,19 +10,25 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagConstraints
 import gcom.Group
 import gcom.common._
+import gcom.transport.Transport
+import gcom.Communicator
+import gcom.ordering.Ordering
 
-class DebugGui extends SimpleSwingApplication {
+/**
+ * Provides 
+ * top                    : Returns a mainframe with debugging GUI
+ * sendFunction           : The function to execute when a message is received
+ * showGroupSelectDialog  : Shows a dialog where the user can select a group
+ */
+object DebugGui {
 
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
 
   var messageQueues = Map[String,List[String]]();
   var messageCounter = 0
-
-  def top = new MainFrame {
-    title = "ChatGui"
-
-    /* Display a dialog for user to select group before showing gui */
+  
+  def showGroupSelectDialog(possibilities: List[Group]): Option[Group] = {
     import Dialog._
     val possibilities = DummyNameServer.listGroups;
     val buttons = new BoxPanel(Orientation.Vertical)
@@ -32,16 +38,21 @@ class DebugGui extends SimpleSwingApplication {
       scala.swing.Dialog.Message.Plain,
       Swing.EmptyIcon,
       possibilities, null)
+    groupToJoin
+  }
+  
+  
+  object chatBox extends TextArea{
+    text = "Welcome to chat"
+    editable = false;
+  }
 
-    if(groupToJoin.isEmpty){
-      quit()
-    }
+  object scrollingChatBox extends ScrollPane{
+    contents = chatBox;
+  }
 
-    val com = DummyNameServer.joinGroup(
-        groupToJoin.get,
-        { msg =>
-
-          chatBox.append("\n" + msg)
+  def sendFunction(msg: String) {
+        chatBox.append("\n" + msg)
           /* Work around bug where maximum was not yet updated, let swing
            * handle scrolling down.
            */
@@ -51,8 +62,12 @@ class DebugGui extends SimpleSwingApplication {
                       bar.value = bar.maximum
                   }
               }
-          );
-         });
+         );
+  }
+  def top(t: Transport, o: Ordering, c: Communicator, group: Group) = new MainFrame {
+    title = "ChatGui " + group.toString
+
+    val com = c
 
     object dropText extends Label("Delay: ")
     object dropInput extends CheckBox
@@ -73,32 +88,7 @@ class DebugGui extends SimpleSwingApplication {
     object button extends Button {
       text = "Send"
     }
-    object chatBox extends TextArea{
-      text = "Welcome to chat"
-      editable = false;
-      listenTo(button)
-      listenTo(chatInput)
-      reactions += {
-        case ButtonClicked(button) => sendMsg()
-        case EditDone(_) => sendMsg()
-      }
-      def sendMsg() = {
-         val drop = dropInput.selected;
-         val delay = try{
-            delayInput.text.toInt
-            } catch{
-              case e: NumberFormatException =>
-                0
-            }
-          messageCounter = 0
-          com.broadcastMessage(chatInput.text)
-      }
 
-    }
-
-    object scrollingChatBox extends ScrollPane{
-      contents = chatBox;
-    }
     object nodeList extends ListView[String]{
       listData = List("Waiting for node info...")
     }
@@ -191,6 +181,24 @@ class DebugGui extends SimpleSwingApplication {
         counter.text = messageCounter.toString + " Messages"
       }
     }
+    listenTo(button)
+    listenTo(chatInput)
+    reactions += {
+      case ButtonClicked(button) => sendMsg()
+      case EditDone(_) => sendMsg()
+    }
+    def sendMsg() = {
+       val drop = dropInput.selected;
+       val delay = try{
+          delayInput.text.toInt
+       } catch{
+         case e: NumberFormatException =>
+          0
+       }
+       messageCounter = 0
+       com.broadcastMessage(chatInput.text)
+    }
+
 
     private def updateList() = {
       queueList.listData_=(messageQueues.keySet.toSeq)

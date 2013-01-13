@@ -65,7 +65,7 @@ class FIFO(c: Communication, callbck: Message => Unit)
     //Remember messages not yet delivered
     val newHoldBacks = for (n <- nodes) yield {
       if(holdBacks.contains(n._1)) { (n._1, holdBacks(n._1)  ) }
-      else                      { (n._1, List() ) }
+      else                         { (n._1, List() ) }
     };
     holdBacks = Map(newHoldBacks: _*);
 
