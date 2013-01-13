@@ -18,7 +18,11 @@ class CausalTotal(
   val causal = Causal.create(c, { total.receiveMessage(_) }, thisNode)
   
   def receiveMessage(msg : Message) = causal.receiveMessage _
-  
+
+  def updateView(newClock: Map[NodeID, Int], order: Int){
+    causal.updateView(newClock)
+    total.updateView(order)
+  }
   
   override def sendToAll(dst: List[NodeID],payload: String) : Unit = {
     communicator.sendToAll(dst, payload,createOrdering())
