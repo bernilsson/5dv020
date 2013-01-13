@@ -6,33 +6,9 @@ import com.sun.java.swing.plaf.gtk.GTKLookAndFeel
 import javax.swing.{UIManager}
 import java.awt.GridBagConstraints
 import java.awt.GridBagConstraints
-/*
-class DummyCommunicator(callBack: String => Unit){
-  def broadCastMsg(msg: String){
-      callBack(msg);
-  }
-  def leaveGroup() = {println( "Leaving" )}
-}
+import gcom.Group
+import gcom.common.Message
 
-object DummyNameServer{
-  def joinGroup(g: JoinGroup, onRecv: String => Unit) = {
-    new Thread(new Runnable{
-      def run(){
-        for(i <- 1 to 100){
-          onRecv("Hello " + i)
-          Thread.sleep(100);
-        }
-      }
-    }).start();
-
-    new DummyCommunicator(onRecv);
-  }
-  def listGroups(): List[Group] = {
-    List(Group("Group1", Reliable(),FIFO()),
-    * Group("Group2", NonReliable(),Total()));
-  }
-}
-*/
 object DebugGui extends SimpleSwingApplication {
 
   //initialize NameServer
@@ -47,19 +23,19 @@ object DebugGui extends SimpleSwingApplication {
     import Dialog._
     val possibilities = DummyNameServer.listGroups;
     val buttons = new BoxPanel(Orientation.Vertical)
-    val s = showInput[Group](buttons,
+    val groupToJoin = showInput[Group](buttons,
       "Select a server",
       "Server Selection",
-      Message.Plain,
+      scala.swing.Dialog.Message.Plain,
       Swing.EmptyIcon,
       possibilities, null)
 
-    if(s.isEmpty){
+    if(groupToJoin.isEmpty){
       quit()
     }
 
     val com = DummyNameServer.joinGroup(
-        ExistingGroup(s.get.groupName),
+        groupToJoin.get,
         { msg =>
 
           chatBox.append("\n" + msg)
@@ -111,7 +87,7 @@ object DebugGui extends SimpleSwingApplication {
               case e: NumberFormatException =>
                 0
             }
-          com.broadCastMsg(chatInput.text)
+          com.broadcastMessage(chatInput.text)
       }
 
     }
