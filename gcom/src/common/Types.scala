@@ -21,24 +21,15 @@ object NodeID {
   }
 }
 
+sealed abstract class OrderingData
+case class NoOrderingData() extends OrderingData
+case class CausalData(clock: Map[NodeID, Int]) extends OrderingData
+case class FIFOData(seq: Int) extends OrderingData
+case class TotalOrdData(order: Int) extends OrderingData
 
-/** Used for testing. */
-object TestMessage{
-  def create(payload: String) = Message(UnreliableMessage(), NoOrdering(), payload);
-  def create(payload: String, ordering: MessageOrdering) = Message(UnreliableMessage(), ordering, payload);
-}
-/** On receiving this, die immediately. */
-case class BlackSpot() extends AbstractMessage;
-
-sealed abstract class MessageOrdering;
-case class NoOrdering() extends MessageOrdering;
-case class CausalMessage(clock: Map[NodeID, Int]) extends MessageOrdering
-case class FIFOMessage(seq: Int) extends MessageOrdering
-case class TotalOrdering(order: Int) extends MessageOrdering
-
-sealed abstract class Reliability;
-case class UnreliableMessage() extends Reliability;
-case class ReliableMessage(seq: Int) extends Reliability;
+sealed abstract class ReliabilityData
+case class NoReliabilityData() extends ReliabilityData
+case class ReliableMsgData(seq: Int) extends ReliabilityData
 
 sealed abstract class AbstractMessage extends Serializable {
   var senders = List[NodeID]();
@@ -47,14 +38,16 @@ sealed abstract class AbstractMessage extends Serializable {
   def addSender(n : NodeID) : Unit = senders = n +: senders;
 }
 
-case class Message(reliability : Reliability, 
-                     ordering : MessageOrdering,
-                     payload : String) extends AbstractMessage
-/* may add other types of messages to be used by the transport layer,
- * e.g. Ping/Pong/DieImmediately
- */
+case class Message(reliability : ReliabilityData,
+                   ordering : OrderingData,
+                   payload : String) extends AbstractMessage
+/** On receiving this, die immediately. */
+case class BlackSpot() extends AbstractMessage;
 
-
-
-
-
+/** Used for testing. */
+object TestMessage{
+  def create(payload: String) = Message(NoReliabilityData(),
+                                        NoOrderingData(), payload);
+  def create(payload: String, ordering: OrderingData) =
+    Message(NoReliabilityData(), ordering, payload);
+}
