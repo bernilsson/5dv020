@@ -84,6 +84,7 @@ class BasicTransport(id : NodeID,
 
   def receiveMessage(msg : AbstractMessage) = {
     queue.put(msg);
+    publish(UpdateSentMessages(1))
     logger.debug("Message received: " + msg.toString)
   }
 
