@@ -15,7 +15,7 @@ class CausalTotal(
     Ordering (c: Communication, callbck : Message => Unit) {
   
   val total =  Total.create(c, callback, nextOrder)
-  val causal = Causal.create(c, { total.receiveMessage(_) }, thisNode)
+  val causal = Causal.create(c, {println("causal deliver"); total.receiveMessage(_) }, thisNode)
   
   def receiveMessage(msg : Message) = {
 	  causal.receiveMessage(msg)
