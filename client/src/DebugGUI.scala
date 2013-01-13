@@ -90,7 +90,7 @@ class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends Ma
     }
 
     object nodeList extends ListView[String]{
-      listData = List("Waiting for node info...")
+      listData = communicator.listGroupMembers.map(_.toString).toList
     }
 
     object counter extends Label("0 Messages")
