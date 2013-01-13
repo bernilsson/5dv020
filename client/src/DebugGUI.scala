@@ -9,7 +9,7 @@ import java.awt.GridBagConstraints
 import gcom.Group
 import gcom.common._
 
-object DebugGui extends SimpleSwingApplication {
+class DebugGui extends SimpleSwingApplication {
 
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
@@ -168,8 +168,8 @@ object DebugGui extends SimpleSwingApplication {
     }
 
     }
-    
-   
+
+
     listenTo(queueList.selection)
     reactions += {
       case UpdateQueue(name, list) => {

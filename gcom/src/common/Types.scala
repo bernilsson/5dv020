@@ -27,7 +27,7 @@ case class FIFOData(seq: Int) extends OrderingData
 
 
 trait IsCausal extends OrderingData{
-  
+
   val clock: Map[NodeID, Int]
   /* Because we need to be able to create new
    * causals with the same type.
@@ -44,7 +44,7 @@ case class TotalOrdData(order: Int) extends IsTotal
 
 case class CausalTotalData(
     clock: Map[NodeID, Int],
-    order: Int) 
+    order: Int)
   extends IsCausal with IsTotal {
   override def updated(clock: Map[NodeID, Int]) = CausalTotalData(clock,this.order)
 }

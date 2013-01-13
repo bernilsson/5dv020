@@ -12,6 +12,7 @@ class NonOrdered(communicator : Communication,
     callback(msg)
   }
   def createOrdering() = NoOrderingData()
+  def setOrderCallback( callback: () => Int ) = { ; }
 }
 
 object NonOrdered {

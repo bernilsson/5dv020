@@ -1,4 +1,3 @@
-
 import swing._
 import swing.event._
 import java.awt.FlowLayout
@@ -28,7 +27,7 @@ object DummyNameServer {
         }
       }
     }).start();
-    
+
     new DummyCommunicator(onRecv);
   }
   def listGroups(): List[Group] = {
@@ -37,7 +36,7 @@ object DummyNameServer {
   }
 }
 
-object ChatGui extends SimpleSwingApplication {
+class ChatGui extends SimpleSwingApplication {
 
   //initialize NameServer
   //Client.parser.parse(args)
@@ -53,7 +52,7 @@ object ChatGui extends SimpleSwingApplication {
     val s = showInput[Group](buttons,
       "Select a server",
       "Server Selection",
-      Message.Question, 
+      Message.Question,
       Swing.EmptyIcon,
       possibilities, null)
 
@@ -62,8 +61,8 @@ object ChatGui extends SimpleSwingApplication {
     }
 
     val com = DummyNameServer.joinGroup(
-        s.get, 
-        { msg => 
+        s.get,
+        { msg =>
           chatBox.append("\n" + msg)
           javax.swing.SwingUtilities.invokeLater(new Runnable() {
                   def run() {
@@ -87,20 +86,20 @@ object ChatGui extends SimpleSwingApplication {
     object chatInput extends TextField(30){
       horizontalAlignment = Alignment.Left;
     };
-    
+
     object nodeList extends ListView(List("Waiting for group info"))
-    
+
     object inputPanel extends FlowPanel{
       contents.append(chatInput, button);
     }
-    
+
     contents = new BoxPanel(Orientation.Vertical) {
       contents.append(new BoxPanel(Orientation.Horizontal){
-       contents.append(chatScroller, new ScrollPane(nodeList)) 
+       contents.append(chatScroller, new ScrollPane(nodeList))
       }, inputPanel)
       border = Swing.EmptyBorder(5, 5, 5, 5)
     }
-    
+
     listenTo(button)
     listenTo(chatInput)
     reactions += {
@@ -109,7 +108,7 @@ object ChatGui extends SimpleSwingApplication {
       case EditDone(_) =>
         com.broadcastMessage(chatInput.text)
     }
-      
+
     override def closeOperation(){
       com.leaveGroup
       super.closeOperation
@@ -117,4 +116,3 @@ object ChatGui extends SimpleSwingApplication {
   }
 
 }
-

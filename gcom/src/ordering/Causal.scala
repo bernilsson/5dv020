@@ -84,6 +84,8 @@ class Causal(
     clock = clock + 1;
     CausalData(vectorClock + (index -> clock ));
   }
+
+  def setOrderCallback( callback: () => Int ) = { ; }
 }
 
 object Causal {

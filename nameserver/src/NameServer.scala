@@ -56,33 +56,76 @@ object NameServer extends NameServer {
     }
   }
 
-  /* Actually interesting operations. */
+  /* The actual operations. */
   import java.util.concurrent.ConcurrentHashMap;
   val groups = new ConcurrentHashMap[Group, NodeID]()
 
   def listGroups() : List[Group] = {
+    import collection.JavaConversions._
+
     logger.debug("Nameserver.listGroups")
-    return null
+    var ret = List[Group]()
+    // TOTHINK: Iterators are weakly consistent. Take a snapshot instead?
+    for (key <- groups.keys) {
+      ret = key :: ret
+    }
+
+    return ret
   }
 
   def setGroupLeader(g : Group, l : NodeID) : Unit = {
     logger.debug("Nameserver.setGroupLeader")
-    ;
+    groups.put(g, l)
+  }
+
+  def getGroupLeader(g : Group) : Option[NodeID] = {
+    logger.debug("Nameserver.getGroupLeader")
+    if (groups.contains(g)) {
+      return Some(groups.get(g))
+    }
+    else {
+      return None
+    }
   }
 
   def removeGroup(g: Group) : Boolean = {
     logger.debug("Nameserver.removeGroup")
-    return false;
+    if (groups.contains(g)) {
+      groups.remove(g)
+      return true
+    }
+    else {
+      return false
+    }
   }
 
   /* Temp operations for testing.*/
-  def joinGroup(n : NodeID) : List[NodeID] = {
-    logger.debug("Nameserver.joinGroup")
-    return null
+  import java.util.concurrent.ConcurrentSkipListSet
+  var group = new ConcurrentSkipListSet[NodeID]()
+
+  def joinGroup(n : NodeID) : Unit = {
+    logger.debug("Nameserver.joinGroup: " + n.toString)
+    group.add(n)
   }
+
+  def listGroupMembers() : List[NodeID] = {
+    import collection.JavaConversions._
+
+    logger.debug("Nameserver.listGroupMembers")
+    var ret = List[NodeID]()
+    // TOTHINK: Iterators are weakly consistent. Take a snapshot instead?
+    for (node <- group.iterator()) {
+      ret = node :: ret
+    }
+
+    return ret
+  }
+
+  import java.util.concurrent.atomic.AtomicInteger
+  val counter = new AtomicInteger()
 
   def incCounter() : Int = {
     logger.debug("Nameserver.incCounter")
-    return 0
+    return counter.getAndIncrement
   }
 }

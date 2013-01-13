@@ -19,4 +19,7 @@ abstract class Ordering (
     communicator.sendToAll(dst, payload,createOrdering())
   }
   protected def createOrdering() : OrderingData
+
+  // For Total and CausalTotal.
+  def setOrderCallback( callback: () => Int )
 }

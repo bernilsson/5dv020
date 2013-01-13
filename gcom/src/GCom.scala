@@ -31,17 +31,34 @@ trait NameServer extends Remote {
   def setGroupLeader(g : Group, l : NodeID) : Unit
 
   @throws(classOf[RemoteException])
-  def removeGroup(g: Group) : Boolean
+  def getGroupLeader(g : Group) : Option[NodeID]
 
   @throws(classOf[RemoteException])
-  def joinGroup(n : NodeID) : List[NodeID]
+  def removeGroup(g: Group) : Boolean
 
+  /* Temp method for the dummy implementation. */
+  @throws(classOf[RemoteException])
+  def joinGroup(n : NodeID) : Unit
+
+  /* Temp method for the dummy implementation. */
+  @throws(classOf[RemoteException])
+  def listGroupMembers() : List[NodeID]
+
+  /* Temp method for the dummy implementation. */
   @throws(classOf[RemoteException])
   def incCounter() : Int
 }
 
 trait Communicator {
+  // Send/receive messages.
   def broadcastMessage(msg : String) : Unit
+  def setOnReceive(callback : String => Unit)
+
+  // Group operations.
+  def listGroupMembers() : List[NodeID]
   def leaveGroup() : Unit
   def killGroup() : Unit
+
+  // Increment the shared group counter.
+  def incCounter() : Int
 }

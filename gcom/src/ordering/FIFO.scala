@@ -71,6 +71,8 @@ class FIFO(c: Communication, callbck: Message => Unit)
 
     sequences = Map(nodes: _*);
   }
+
+  def setOrderCallback( callback: () => Int ) = { ; }
 }
 
 object FIFO{

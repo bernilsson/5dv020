@@ -46,6 +46,10 @@ class Reliable(t : Transport, callbck : Message => Unit,
       callback(msg)
   }
   }
+
+  def setHostCallback (callbck : () => List[NodeID]) = {
+    hostCallback = callbck;
+  }
 }
 
 object Reliable {

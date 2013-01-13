@@ -17,6 +17,8 @@ class NonReliable(t : Transport, callbck : Message => Unit)
   }
 
   def receiveMessage(msg : Message) = callback(msg)
+
+  def setHostCallback (callbck : () => List[NodeID]) = { ; }
 }
 
 object NonReliable {

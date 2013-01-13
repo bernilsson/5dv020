@@ -30,9 +30,12 @@ trait Transport extends Remote with Runnable {
   /** Change the callback invoked when a message is received. */
   @throws(classOf[RemoteException])
   def setOnReceive(callbck : Message => Unit) : Unit
-  
+
   @throws(classOf[RemoteException])
   def nodeID(): NodeID;
+
+  @throws(classOf[RemoteException])
+  def ping() : Unit;
 
   @throws(classOf[RemoteException])
   def run() : Unit;
@@ -105,6 +108,8 @@ class BasicTransport(id : NodeID,
     }
   }
 
+  def ping : Unit = { ; }
+
   def run() : Unit = {
     while (true) {
       val msg = queue.take();
@@ -123,5 +128,14 @@ object BasicTransport {
     val t = new BasicTransport(id, callback, logger);
     t.register();
     return t;
+  }
+
+  def pingTransport(t : Transport) : Boolean = {
+    try {
+      t.ping(); return true;
+    }
+    catch {
+      case _ : RemoteException => return false
+    }
   }
 }

@@ -15,4 +15,6 @@ abstract class Communication(t : Transport, callbck : Message => Unit) {
   /** Change the onReceive callback. */
   def setOnReceive(callbck : Message => Unit) : Unit = callback = callbck
 
+  /** For the Reliable method. */
+  def setHostCallback (callbck : () => List[NodeID])
 }

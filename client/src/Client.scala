@@ -1,7 +1,14 @@
 package gcom.client
 
+import java.rmi.registry.LocateRegistry
+import java.rmi.registry.Registry
+
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
+
 import gcom._
 import gcom.common.NodeID
+import gcom.common.Util
 
 object Client {
 
@@ -64,21 +71,63 @@ object Client {
     case "join" :: groupName :: Nil => CommandJoin(groupName)
     case _ => parser.usage("no command or incorrect command")
   }
+  val name   = Util.getRandomUUID
+  val host   = Util.getLocalHostName
+  val nodeID = new NodeID(name, host, port)
+  val logger = LoggerFactory.getLogger(name)
+
+  // Assemble a Communicator to be passed to the GUI.
+  // TODO: Modify to also return Transport, Communication and Ordering so that
+  // they could be plugged into the debugging interface.
+  def assembleCommunicator(nsrv : NameServer,
+                           leader : NodeID) : Communicator = {
+    val transport =
+      gcom.transport.BasicTransport.create(nodeID, {msg =>}, logger)
+    val comm =
+      reliability match {
+        case UnreliableMulticast() =>
+          gcom.communication.NonReliable.create(transport, {msg =>});
+        case ReliableMulticast() =>
+          gcom.communication.Reliable.create(transport, {msg =>},
+                                             {() => List[NodeID]()});
+      }
+    val ord =
+        ordering match {
+          case NoOrdering() =>
+            gcom.ordering.NonOrdered.create(comm, {msg =>})
+          case FIFOOrdering() =>
+            gcom.ordering.FIFO.create(comm, {msg =>})
+          case CausalOrdering() =>
+            gcom.ordering.Causal.create(comm, {msg =>}, nodeID)
+          case TotalOrdering() =>
+            gcom.ordering.Total.create(comm, {msg =>}, {() => 0})
+          case CausalTotalOrdering() =>
+            gcom.ordering.CausalTotal.create(comm, {msg =>}, nodeID, {() => 0})
+        }
+
+    // Sets all the callbacks we've initialised with dummies above.
+    val communicator =
+      gcom.group.Group.create(nsrv, nodeID, leader, comm, ord, {msg =>})
+
+    return communicator
+  }
 
   def main(args: Array[String]) = {
     try {
       parser.parse(args)
-      println("Port: " + port.toString)
-      println("Multicast type: " + reliability.toString)
-      println("Ordering type: " + ordering.toString)
-      println("Nameserver: " + nameserver.toString)
-      println("Command: " + command.toString)
+      logger.debug("Starting client")
+      logger.debug("Registry on port: " + port.toString)
+      logger.debug("Multicast type: " + reliability.toString)
+      logger.debug("Ordering type: " + ordering.toString)
+      logger.debug("Nameserver: " + nameserver.toString)
+      logger.debug("Command: " + command.toString)
+      val nsrv = connectToNameserver()
       command match {
-        case CommandList()          => commandList()
+        case CommandList()          => commandList(nsrv)
         case CommandKill(groupName) =>
-          commandKill(Group(groupName, reliability, ordering))
+          commandKill(nsrv, Group(groupName, reliability, ordering))
         case CommandJoin(groupName) =>
-          commandJoin(Group(groupName, reliability, ordering))
+          commandJoin(nsrv, Group(groupName, reliability, ordering))
       }
     }
     catch {
@@ -86,15 +135,49 @@ object Client {
     }
   }
 
-  def commandList() : Unit = {
-    println("not implemented")
+  def connectToNameserver() : NameServer = {
+    if (System.getSecurityManager == null) {
+      System.setSecurityManager(new SecurityManager);
+    }
+    val registry = LocateRegistry.getRegistry(nameserver.host, nameserver.port)
+    val stub = registry.lookup(nameserver.name).asInstanceOf[NameServer]
+
+    logger.debug("Connected to the nameserver: " + nameserver.toString)
+    return stub
   }
 
-  def commandJoin(group : Group) = {
-    println("not implemented")
+  def commandList(nsrv: NameServer) : Unit = {
+    val groups = nsrv.listGroups()
+    println("Groups:")
+    groups match {
+      case List() => println("none")
+      case _  => groups.foreach { group => println(group.toString) }
+    }
   }
 
-  def commandKill(group : Group) = {
-    println("not implemented")
+  def commandJoin(nsrv: NameServer, group : Group) = {
+    nsrv.getGroupLeader(group) match {
+      case None => {
+        println("Group " + group.name + " does not exist!")
+      }
+      case Some(leader) => {
+        val comm = assembleCommunicator(nsrv, leader)
+        // TODO
+        // val gui = new gcom.client.gui.ChatGui(comm)
+        // gui.main(Array[String]())
+      }
+    }
+  }
+
+  def commandKill(nsrv: NameServer, group : Group) = {
+    nsrv.getGroupLeader(group) match {
+      case None => {
+        println("Group " + group.name + " does not exist!")
+      }
+      case Some(leader) => {
+        val comm = assembleCommunicator(nsrv, leader)
+        comm.killGroup()
+      }
+    }
   }
 }
