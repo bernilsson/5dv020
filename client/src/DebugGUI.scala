@@ -13,6 +13,7 @@ import gcom.common._
 import gcom.transport.Transport
 import gcom.Communicator
 import gcom.ordering.Ordering
+import gcom.transport.BasicTransport
 
 /**
  * Provides 
@@ -23,7 +24,10 @@ class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends Ma
 
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
-
+  t match {
+    case x: BasicTransport => listenTo(x) 
+  }
+  listenTo(o)
   communicator.setOnReceive(sendFunction(_))
   
   var messageQueues = Map[String,List[String]]();
@@ -174,7 +178,7 @@ class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends Ma
       // `` lets us match against that specific variable.
       case ListSelectionChanged(`queueList`,range,live) => {
         val key = queueList.listData(queueList.selection.anchorIndex)
-        messageList.listData = messageQueues(key)
+        messageList.listData = messageQueues.getOrElse(key, List())
       }
       case UpdateSentMessages(num) => {
         messageCounter += 1
@@ -185,7 +189,6 @@ class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends Ma
     listenTo(chatInput)
     reactions += {
       case ButtonClicked(button) => sendMsg()
-      case EditDone(_) => sendMsg()
     }
     def sendMsg() = {
        val drop = dropInput.selected;
