@@ -3,8 +3,6 @@ package gcom.client.gui
 import swing._
 import swing.event._
 import java.awt.FlowLayout
-import com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel
-import com.sun.java.swing.plaf.gtk.GTKLookAndFeel
 import javax.swing.{UIManager}
 import java.awt.GridBagConstraints
 import java.awt.GridBagConstraints
@@ -15,6 +13,7 @@ import gcom.Communicator
 import gcom.ordering.Ordering
 import gcom.communication.Communication
 import gcom.ordering.NonOrdered
+import scala.swing.ListView.Renderer
 
 /**
  * Provides 
@@ -40,7 +39,6 @@ class DebugGui(
   
   def showGroupSelectDialog(possibilities: List[Group]): Option[Group] = {
     import Dialog._
-    val possibilities = DummyNameServer.listGroups;
     val buttons = new BoxPanel(Orientation.Vertical)
     val groupToJoin = showInput[Group](buttons,
       "Select a server",
@@ -87,6 +85,7 @@ class DebugGui(
 
     object queueList extends ListView[(String,Ordering)]{
       listData = List()
+      renderer = Renderer(_._1)
     }
 
     object messageList extends ListView[String]{
@@ -211,7 +210,9 @@ class DebugGui(
 
 
     private def updateList() = {
-      queueList.listData_=(messageQueues.keySet.toSeq)
+      queueList.listData = messageQueues.map({
+        case (ordering, (header,list)) => (header, ordering)
+      }).toList
     }
 
     override def closeOperation(){
