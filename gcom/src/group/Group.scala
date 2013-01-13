@@ -20,7 +20,7 @@ class DummyGroup (nsrv : NameServer, ndID : NodeID, ldr : NodeID,
     val nodes = nsrv.listGroupMembers()
     ord.sendToAll(nodes, msg)
   }
-  def listGroupMembers() : List[NodeID] = { nsrv.listGroupMembers() }
+  def listGroupMembers() : Set[NodeID] = { nsrv.listGroupMembers() }
   // Not implemented with dummy group mngmnt.
   def leaveGroup() : Unit = { ; }
   def killGroup() : Unit = { ; }
@@ -41,6 +41,7 @@ object Group {
     comm.setHostCallback(dummy.listGroupMembers)
     ord.setOnReceive(dummy.receiveMessage)
     ord.setOrderCallback(dummy.incCounter)
+    nsrv.joinGroup(ndID)
     return dummy
   }
 }

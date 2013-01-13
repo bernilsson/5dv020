@@ -5,7 +5,7 @@ import gcom.transport.Transport;
 
 class NonReliable(t : Transport, callbck : Message => Unit)
                  extends Communication(t, callbck) {
-  def sendToAll(dsts : List[NodeID],
+  def sendToAll(dsts : Set[NodeID],
                 payload: String, ordering: OrderingData) : List[NodeID] = {
     var retList = List[NodeID]()
     dsts.foreach { dst =>
@@ -18,7 +18,7 @@ class NonReliable(t : Transport, callbck : Message => Unit)
 
   def receiveMessage(msg : Message) = callback(msg)
 
-  def setHostCallback (callbck : () => List[NodeID]) = { ; }
+  def setHostCallback (callbck : () => Set[NodeID]) = { ; }
 }
 
 object NonReliable {

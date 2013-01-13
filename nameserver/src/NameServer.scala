@@ -57,20 +57,12 @@ object NameServer extends NameServer {
   }
 
   /* The actual operations. */
-  import java.util.concurrent.ConcurrentHashMap;
-  val groups = new ConcurrentHashMap[Group, NodeID]()
+  import scala.collection.concurrent.TrieMap;
+  val groups = TrieMap[Group, NodeID]()
 
-  def listGroups() : List[Group] = {
-    import collection.JavaConversions._
-
+  def listGroups() : Set[Group] = {     //
     logger.debug("Nameserver.listGroups")
-    var ret = List[Group]()
-    // TOTHINK: Iterators are weakly consistent. Take a snapshot instead?
-    for (key <- groups.keys) {
-      ret = key :: ret
-    }
-
-    return ret
+    return groups.keySet.toSet
   }
 
   def setGroupLeader(g : Group, l : NodeID) : Unit = {
@@ -80,12 +72,7 @@ object NameServer extends NameServer {
 
   def getGroupLeader(g : Group) : Option[NodeID] = {
     logger.debug("Nameserver.getGroupLeader")
-    if (groups.contains(g)) {
-      return Some(groups.get(g))
-    }
-    else {
-      return None
-    }
+    groups.get(g)
   }
 
   def removeGroup(g: Group) : Boolean = {
@@ -100,25 +87,16 @@ object NameServer extends NameServer {
   }
 
   /* Temp operations for testing.*/
-  import java.util.concurrent.ConcurrentSkipListSet
-  var group = new ConcurrentSkipListSet[NodeID]()
+  var group = TrieMap[NodeID, Unit]()
 
   def joinGroup(n : NodeID) : Unit = {
     logger.debug("Nameserver.joinGroup: " + n.toString)
-    group.add(n)
+    group.put(n, ())
   }
 
-  def listGroupMembers() : List[NodeID] = {
-    import collection.JavaConversions._
-
+  def listGroupMembers() : Set[NodeID] = {
     logger.debug("Nameserver.listGroupMembers")
-    var ret = List[NodeID]()
-    // TOTHINK: Iterators are weakly consistent. Take a snapshot instead?
-    for (node <- group.iterator()) {
-      ret = node :: ret
-    }
-
-    return ret
+    return group.keySet.toSet
   }
 
   import java.util.concurrent.atomic.AtomicInteger

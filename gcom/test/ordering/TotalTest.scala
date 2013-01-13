@@ -42,7 +42,7 @@ class TotalSpec extends FlatSpec {
     for(i <- shuffled){
         val msg = ""+ i
         sentMessages = sentMessages :+ msg
-        ordering.sendToAll(List(id), msg)
+        ordering.sendToAll(Set(id), msg)
     }
     Thread.sleep(1000)
     assert(receivedList.map(_.payload) === sentMessages)

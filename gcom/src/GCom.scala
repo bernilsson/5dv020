@@ -25,7 +25,7 @@ sealed case class Group (name : String
 trait NameServer extends Remote {
 
   @throws(classOf[RemoteException])
-  def listGroups() : List[Group]
+  def listGroups() : Set[Group]
 
   @throws(classOf[RemoteException])
   def setGroupLeader(g : Group, l : NodeID) : Unit
@@ -42,7 +42,7 @@ trait NameServer extends Remote {
 
   /* Temp method for the dummy implementation. */
   @throws(classOf[RemoteException])
-  def listGroupMembers() : List[NodeID]
+  def listGroupMembers() : Set[NodeID]
 
   /* Temp method for the dummy implementation. */
   @throws(classOf[RemoteException])
@@ -55,7 +55,7 @@ trait Communicator {
   def setOnReceive(callback : String => Unit)
 
   // Group operations.
-  def listGroupMembers() : List[NodeID]
+  def listGroupMembers() : Set[NodeID]
   def leaveGroup() : Unit
   def killGroup() : Unit
 

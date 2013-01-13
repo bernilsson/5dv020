@@ -30,7 +30,7 @@ class NonOrderedSpec extends FlatSpec {
     thread.start();
 
     val msg = "TEST"
-    ordering.sendToAll(List(id), msg)
+    ordering.sendToAll(Set(id), msg)
     Thread.sleep(1000)
     assert(msg == message)
 

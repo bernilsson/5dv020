@@ -39,8 +39,8 @@ class CausalTotal(
     total.updateView(order)
   }
 
-  override def sendToAll(dst: List[NodeID],payload: String) : Unit = {
-    communicator.sendToAll(dst, payload,createOrdering())
+  override def sendToAll(dsts: Set[NodeID],payload: String) : Unit = {
+    communication.sendToAll(dsts, payload, createOrdering())
   }
   override protected def createOrdering() : OrderingData = {
     val totalData = total.createOrdering

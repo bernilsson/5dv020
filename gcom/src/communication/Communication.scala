@@ -9,12 +9,12 @@ abstract class Communication(t : Transport, callbck : Message => Unit) {
 
   /** Send a message to all nodes in the list. Return the IDs of those that were
    *  reachable. */
-  def sendToAll(dst : List[NodeID],
+  def sendToAll(dst : Set[NodeID],
                 payload : String, ordering: OrderingData) : List[NodeID]
 
   /** Change the onReceive callback. */
   def setOnReceive(callbck : Message => Unit) : Unit = callback = callbck
 
   /** For the Reliable method. */
-  def setHostCallback (callbck : () => List[NodeID])
+  def setHostCallback (callbck : () => Set[NodeID])
 }

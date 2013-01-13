@@ -12,11 +12,11 @@ abstract class Ordering (
   extends Publisher {
 
   var callback = callbck
-  val communicator = c;
+  val communication = c;
   def setOnReceive(callbck : Message => Unit) = callback = callbck
   def receiveMessage(msg : Message) : Unit
-  def sendToAll(dst: List[NodeID],payload: String) : Unit = {
-    communicator.sendToAll(dst, payload,createOrdering())
+  def sendToAll(dst: Set[NodeID], payload: String) : Unit = {
+    communication.sendToAll(dst, payload,createOrdering())
   }
   protected def createOrdering() : OrderingData
 

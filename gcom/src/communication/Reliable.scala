@@ -5,14 +5,14 @@ import gcom.transport.Transport;
 import scala.collection.immutable.IntMap
 
 class Reliable(t : Transport, callbck : Message => Unit,
-               hostCallbck: () => List[NodeID])
+               hostCallbck: () => Set[NodeID])
       extends Communication(t, callbck) {
 
   var hostCallback = hostCallbck;
   var localSeq = 0;
   var sequences = Map[NodeID,IntMap[Boolean]]();
 
-  def sendToAll(dsts : List[NodeID], payload: String,
+  def sendToAll(dsts : Set[NodeID], payload: String,
                 ordering: OrderingData) : List[NodeID] = {
     var retList = List[NodeID]()
     dsts.foreach { dst =>
@@ -47,14 +47,14 @@ class Reliable(t : Transport, callbck : Message => Unit,
   }
   }
 
-  def setHostCallback (callbck : () => List[NodeID]) = {
+  def setHostCallback (callbck : () => Set[NodeID]) = {
     hostCallback = callbck;
   }
 }
 
 object Reliable {
   def create(t : Transport, callbck : Message => Unit,
-             hostCallback: () => List[NodeID]) : Reliable = {
+             hostCallback: () => Set[NodeID]) : Reliable = {
     val comm = new Reliable(t, callbck, hostCallback)
     t.setOnReceive(comm.receiveMessage)
     return comm

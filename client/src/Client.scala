@@ -93,7 +93,7 @@ object Client {
           gcom.communication.NonReliable.create(transport, {msg =>});
         case ReliableMulticast() =>
           gcom.communication.Reliable.create(transport, {msg =>},
-                                             {() => List[NodeID]()});
+                                             {() => Set[NodeID]()});
       }
     val ord =
         ordering match {
@@ -160,18 +160,14 @@ object Client {
   }
 
   def commandJoin(nsrv: NameServer, group : Group) = {
-    nsrv.getGroupLeader(group) match {
-      case None => {
-        println("Group " + group.name + " does not exist!")
-      }
-      case Some(leader) => {
-        val (communicator, transport, comm, ordering) =
-            assembleCommunicator(nsrv, leader)
-        // Calls communicator's setOnReceive
-        val gui = new gcom.client.gui.ChatGui(communicator)
-        gui.main(Array[String]())
-      }
-    }
+    val leader = nsrv.getGroupLeader(group).getOrElse(nodeID)
+    val (communicator, transport, comm, ordering) =
+          assembleCommunicator(nsrv, leader)
+    // Calls communicator's setOnReceive
+    val gui = new gcom.client.gui.ChatGui(communicator)
+    val transportThread = new Thread(transport)
+    transportThread.start()
+    gui.main(Array[String]())
   }
 
   def commandKill(nsrv: NameServer, group : Group) = {
