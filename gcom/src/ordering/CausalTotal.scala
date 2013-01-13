@@ -23,7 +23,7 @@ class CausalTotal(
   reactions += {
     case x => publish(x)
   }
-  
+
   def receiveMessage(msg : Message) = {
       causal.receiveMessage(msg)
   }
@@ -40,6 +40,10 @@ class CausalTotal(
     val totalData = total.createOrdering
     val causalData = causal.createOrdering
     CausalTotalData(causalData.clock, totalData.order)
+  }
+
+  def setOrderCallback( callback: () => Int ) = {
+    total.setOrderCallback(callback);
   }
 }
 

@@ -7,10 +7,10 @@ import gcom.common.OrderingData
 import scala.swing.Publisher
 
 abstract class Ordering (
-    c: Communication, 
-    callbck : Message => Unit) 
+    c: Communication,
+    callbck : Message => Unit)
   extends Publisher {
-  
+
   var callback = callbck
   val communicator = c;
   def setOnReceive(callbck : Message => Unit) = callback = callbck
