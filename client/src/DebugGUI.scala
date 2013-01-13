@@ -10,17 +10,21 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagConstraints
 import gcom.Group
 import gcom.common._
-import gcom.transport.Transport
+import gcom.transport._
 import gcom.Communicator
 import gcom.ordering.Ordering
-import gcom.transport.BasicTransport
+import gcom.communication.Communication
 
 /**
  * Provides 
  * top                    : Returns a mainframe with debugging GUI
  * showGroupSelectDialog  : Shows a dialog where the user can select a group
  */
-class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends MainFrame {
+class DebugGui(
+    t: Transport,
+    o: Ordering, 
+    communicator: Communicator,
+    com: Communication) extends MainFrame {
 
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
@@ -162,7 +166,7 @@ class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends Ma
       gbc.fill = fill
       add(component,new Constraints(gbc))
     }
-
+ 
     }
 
 
@@ -199,6 +203,8 @@ class DebugGui(t: Transport, o: Ordering, communicator: Communicator) extends Ma
           0
        }
        messageCounter = 0
+       com.setDelay(delay);
+       com.setDrop(drop)
        communicator.broadcastMessage(chatInput.text)
     }
 

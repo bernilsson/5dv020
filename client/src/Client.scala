@@ -167,7 +167,7 @@ object Client {
     val debugGui = 
       new gcom.client.gui.DebugGui(transport,
                                     ordering,
-                                    communicator)
+                                    communicator, comm)
     debugGui.visible = true
     val transportThread = new Thread(transport)
     transportThread.start()
