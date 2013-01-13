@@ -21,3 +21,5 @@ seq(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 libraryDependencies += "commons-lang" % "commons-lang" % "2.6"
 
 libraryDependencies += "org.clapper" % "argot_2.10" % "1.0.0"
+
+libraryDependencies += "org.scala-lang" % "scala-swing" % "2.10.0"
