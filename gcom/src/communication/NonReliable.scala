@@ -5,10 +5,12 @@ import gcom.transport.Transport;
 
 class NonReliable(t : Transport, callbck : Message => Unit)
                  extends Communication(t, callbck) {
-  def sendToAll(dsts : List[NodeID], payload: String, ordering: MessageOrdering) : List[NodeID] = {
+  def sendToAll(dsts : List[NodeID],
+                payload: String, ordering: OrderingData) : List[NodeID] = {
     var retList = List[NodeID]()
     dsts.foreach { dst =>
-      val mid = transport.sendMessage(dst, Message(UnreliableMessage(),ordering,payload))
+      val mid = transport.sendMessage(dst, Message(NoReliabilityData(),
+                                                   ordering, payload))
       retList = mid.map({ id => id :: retList}).getOrElse(retList)
     }
     return retList

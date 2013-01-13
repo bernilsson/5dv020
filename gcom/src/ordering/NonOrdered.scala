@@ -3,13 +3,15 @@ package gcom.ordering;
 import gcom.common.Message;
 import gcom.communication.Communication;
 import gcom.transport.Transport;
-import gcom.common.NoOrdering
+import gcom.common.NoOrderingData
 
-class NonOrdered(communicator : Communication, callbck : Message => Unit) extends Ordering(communicator, callbck) {
+class NonOrdered(communicator : Communication,
+                 callbck : Message => Unit)
+      extends Ordering(communicator, callbck) {
   def receiveMessage(msg : Message) {
     callback(msg)
   }
-  def createOrdering() = NoOrdering() 
+  def createOrdering() = NoOrderingData()
 }
 
 object NonOrdered {
