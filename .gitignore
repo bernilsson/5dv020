@@ -8,8 +8,8 @@ target/
 *.log
 *.out
 *.pdf
+*.jar
 .project
 /.cache
 /.classpath
 .settings/
-bin/

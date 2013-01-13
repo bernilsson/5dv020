@@ -1,0 +1,7 @@
+#! /bin/sh
+sbt nameserver/one-jar
+sbt client/one-jar
+sbt registry/one-jar
+cp nameserver/target/scala-2.10/nameserver_2.10-0.1-one-jar.jar bin/
+cp client/target/scala-2.10/client_2.10-0.1-one-jar.jar bin/
+cp registry/target/scala-2.10/registry_2.10-0.1-one-jar.jar bin/

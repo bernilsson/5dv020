@@ -171,7 +171,7 @@ object DebugGui extends SimpleSwingApplication {
     
     }
     
-    
+   
     listenTo(queueList.selection)
     reactions += {
       case UpdateQueue(name, list) => {

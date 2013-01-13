@@ -4,21 +4,22 @@ import gcom.common._
 import gcom.communication.Communication
 
 
-class FIFO(c: Communication, callbck: Message => Unit) extends Ordering(c, callbck){
-  
-  private var holdBacks = Map[NodeID,List[(Message, FIFOMessage)]]();
+class FIFO(c: Communication, callbck: Message => Unit)
+      extends Ordering(c, callbck){
+
+  private var holdBacks = Map[NodeID,List[(Message, FIFOData)]]();
   private var sequences = Map[NodeID,Int]();
   private var curSeq = 0;
-  
+
   def receiveMessage(msg : Message) {
     msg match {
-      case Message(_, fm: FIFOMessage, _) => handle_message(msg,fm);
+      case Message(_, fm: FIFOData, _) => handle_message(msg,fm);
       case m : Message => callback(m)
     }
     Unit
   }
-  
-  private def handle_message(newm: Message, newfm: FIFOMessage){
+
+  private def handle_message(newm: Message, newfm: FIFOData){
     val from = newm.senders.head
     if(holdBacks.get(from).isEmpty){
       holdBacks += (from -> List());
@@ -32,10 +33,10 @@ class FIFO(c: Communication, callbck: Message => Unit) extends Ordering(c, callb
       check_queue(from);
     }
     else {
-      holdBacks += from-> ((newm,newfm) :: holdBacks(from));  
+      holdBacks += from-> ((newm,newfm) :: holdBacks(from));
     }
   }
-  
+
   private def check_queue(host: NodeID){
     var sequence = sequences(host)
     var list = holdBacks(host).sortBy(m => m._2.seq);
@@ -47,13 +48,13 @@ class FIFO(c: Communication, callbck: Message => Unit) extends Ordering(c, callb
     holdBacks += (host -> list);
     sequences += (host -> sequence);
   }
-  
-  def createOrdering(): FIFOMessage = {
-    val msg = FIFOMessage(curSeq);
+
+  def createOrdering(): FIFOData = {
+    val msg = FIFOData(curSeq);
     curSeq += 1;
     return msg;
   }
-  
+
   def updateView(nodes: Seq[(NodeID, Int)]) = {
     //Remember messages not yet delivered
     val newHoldBacks = for (n <- nodes) yield {
@@ -61,7 +62,7 @@ class FIFO(c: Communication, callbck: Message => Unit) extends Ordering(c, callb
       else                      { (n._1, List() ) }
     };
     holdBacks = Map(newHoldBacks: _*);
-    
+
     sequences = Map(nodes: _*);
   }
 }
