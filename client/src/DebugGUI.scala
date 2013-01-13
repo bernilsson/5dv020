@@ -1,3 +1,5 @@
+package gcom.client.gui
+
 import swing._
 import swing.event._
 import java.awt.FlowLayout
