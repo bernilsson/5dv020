@@ -31,9 +31,18 @@ class Causal(
   }
 
   private def handle_message(newM: Message, newCm: IsCausal){
-    holdBacks = (newM, newCm) :: holdBacks
+    //If we haven't seen a node before, assume this is the first we get
+    vectorClock = (newCm.clock -- vectorClock.keys) ++ vectorClock
+    
+    val from = newM.senders.head
+    // If message is from the past, ignore
     var changed = true;
-
+    if(vectorClock(from) > newCm.clock(from)){
+      changed = false
+    } else {
+      holdBacks = (newM, newCm) :: holdBacks
+    }
+    
     while(changed){
       changed = false;
       holdBacks.foreach{ case (m, cm) =>
@@ -49,7 +58,7 @@ class Causal(
       };
     }
   }
-
+ 
   private def earlierByOthers(
       from: NodeID,
       myClock: Map[NodeID, Int],
@@ -62,22 +71,6 @@ class Causal(
      //If the above predicate was true for zero elements, it was earlier than
      //others
      earlier
-  }
-
-  /** * @param nodes is a sequence of tuples containing nodes and their current
-  clock */
-
-  def updateView(newClock: Map[NodeID, Int]) = {
-    //Only remember messages from nodes in view
-    holdBacks = holdBacks.filter({case (m,cm) =>
-                                  newClock.contains(m.senders.head) })
-    //Remove clocks from messages
-    holdBacks = holdBacks.map { case (m, cm) =>
-      val clocks = cm.clock -- newClock.keySet
-      (m,cm.updated(clocks))
-    }
-    vectorClock = newClock
-    clock = vectorClock(me)
   }
 
   def createOrdering(): CausalData = {

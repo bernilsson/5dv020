@@ -45,12 +45,8 @@ class CausalSpec extends FlatSpec {
     val thread        = new Thread(transport);
     thread.start();
 
-
-    ordering.updateView(Map((a,0),
-                            (b,0),
-                            (c,0)))
-
     val outboundOrder = List(
+        a -> (0,0,0),
         c -> (0,0,1),
         a -> (1,0,0),
         a -> (2,0,0),

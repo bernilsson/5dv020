@@ -34,11 +34,6 @@ class CausalTotal(
       causal.receiveMessage(msg)
   }
 
-  def updateView(newClock: Map[NodeID, Int], order: Int){
-    causal.updateView(newClock)
-    total.updateView(order)
-  }
-
   override def sendToAll(dsts: Set[NodeID],payload: String) : Set[NodeID] = {
     communication.sendToAll(dsts, payload, createOrdering())
   }

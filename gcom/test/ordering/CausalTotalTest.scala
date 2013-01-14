@@ -14,7 +14,7 @@ import gcom.ordering.Causal
 /** Requires an rmiregistry running on port 31337. */
 class CausalTotalSpec extends FlatSpec {
 
-  "CausalTotal ordering" should "deliver messages in a causal order" in {
+  "CausalTotal ordering" should "deliver messages in a causaltotal order" in {
     val host     = "localhost" //Util.getLocalHostName
     val port     = 31337
 
@@ -49,12 +49,8 @@ class CausalTotalSpec extends FlatSpec {
     val thread        = new Thread(transport);
     thread.start();
 
-    ordering.updateView(Map((a,0),
-                            (b,0),
-                            (c,0)),
-                        0)
-
     val outboundOrder = List(
+        a -> (0,0,0,-1),
         c -> (0,0,1,1),
         a -> (1,0,0,0),
         a -> (2,0,0,2),
