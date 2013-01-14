@@ -83,7 +83,7 @@ object Client {
 
   // Assemble a Communicator to be passed to the GUI.
   def assembleCommunicator(nsrv : NameServer,
-                           leader : NodeID)
+                           group : Group)
       : (Communicator, Transport, Communication, Ordering) = {
     val transport =
       gcom.transport.BasicTransport.create(nodeID, {msg =>}, logger)
@@ -111,7 +111,8 @@ object Client {
 
     // Sets all the callbacks we've initialised with dummies above.
     val communicator =
-      gcom.group.Group.create(nsrv, nodeID, leader, comm, ord, {msg =>})
+      gcom.group.DummyGroup.create(group, logger, nsrv, nodeID,
+                                   comm, ord, {msg =>}, {view =>})
 
     return (communicator, transport, comm, ord)
   }
@@ -160,9 +161,8 @@ object Client {
   }
 
   def commandJoin(nsrv: NameServer, group : Group) = {
-    val leader = nsrv.getGroupLeader(group).getOrElse(nodeID)
     val (communicator, transport, comm, ordering) =
-          assembleCommunicator(nsrv, leader)
+          assembleCommunicator(nsrv, group)
     // Calls communicator's setOnReceive
     val debugGui =
       new gcom.client.gui.DebugGui(transport,
@@ -181,7 +181,7 @@ object Client {
         println("Group " + group.name + " does not exist!")
       }
       case Some(leader) => {
-        val tuple = assembleCommunicator(nsrv, leader)
+        val tuple = assembleCommunicator(nsrv, group)
         tuple._1.killGroup()
       }
     }

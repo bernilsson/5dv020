@@ -65,14 +65,25 @@ object NameServer extends NameServer {
     return groups.keySet.toSet
   }
 
+  def getGroupLeader(g : Group) : Option[NodeID] = {
+    logger.debug("Nameserver.getGroupLeader")
+    groups.get(g)
+  }
+
   def setGroupLeader(g : Group, l : NodeID) : Unit = {
     logger.debug("Nameserver.setGroupLeader")
     groups.put(g, l)
   }
 
-  def getGroupLeader(g : Group) : Option[NodeID] = {
-    logger.debug("Nameserver.getGroupLeader")
-    groups.get(g)
+  def getOrSetGroupLeader(g : Group, l : NodeID) : NodeID = {
+    logger.debug("Nameserver.getOrSetGroupLeader")
+    groups.get(g) match {
+      case Some(l) => l
+      case None => {
+        setGroupLeader(g, l);
+        l;
+      }
+    }
   }
 
   def removeGroup(g: Group) : Boolean = {

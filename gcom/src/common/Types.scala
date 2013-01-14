@@ -46,7 +46,8 @@ case class CausalTotalData(
     clock: Map[NodeID, Int],
     order: Int)
   extends IsCausal with IsTotal {
-  override def updated(clock: Map[NodeID, Int]) = CausalTotalData(clock,this.order)
+  override def updated(clock: Map[NodeID, Int])
+    = CausalTotalData(clock,this.order)
 }
 
 sealed abstract class ReliabilityData
@@ -76,7 +77,8 @@ object TestMessage{
 
 /* Debug Events for the GUI */
 import scala.swing.event._
-/** name: The name in the left box, header: header in right box, list of messages */
+/** name: The name in the left box, header: header in right box, list of
+     messages */
 case class UpdateQueue(
     ordering: gcom.ordering.Ordering,
     header: String,
