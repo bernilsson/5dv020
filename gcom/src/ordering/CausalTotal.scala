@@ -7,6 +7,7 @@ import gcom.common.OrderingData
 import gcom.common.CausalTotalData
 import gcom.common.UpdateQueue
 import gcom.common.UpdateSentMessages
+import gcom.common.CausalTotalData
 
 class CausalTotal(
     c: Communication,
@@ -30,8 +31,16 @@ class CausalTotal(
     case x: UpdateQueue => publish(x)
   }
 
-  def receiveMessage(msg : Message) = {
+  def receiveMessage(msg : Message) = { msg match {
+    case Message(_, data : CausalTotalData, _) => {
+      if(!total.initialized){ 
+        total.initialize(data.order)
+      }
       causal.receiveMessage(msg)
+    } 
+    case msg => callback(msg)
+  }
+      
   }
 
   override def sendToAll(dsts: Set[NodeID],payload: String) : Set[NodeID] = {

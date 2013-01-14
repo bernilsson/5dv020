@@ -46,7 +46,6 @@ class CausalSpec extends FlatSpec {
     thread.start();
 
     val outboundOrder = List(
-        a -> (0,0,0),
         c -> (0,0,1),
         a -> (1,0,0),
         a -> (2,0,0),

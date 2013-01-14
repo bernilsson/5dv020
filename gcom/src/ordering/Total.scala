@@ -16,7 +16,7 @@ class Total(c: Communication,
             callbck : Message => Unit, nextOrder : () => Int)
       extends Ordering(c, callbck) {
   var order = 0;
-  var initialized = true
+  var initialized = false
   var holdBacks = List[(Message, IsTotal)]();
   private var getNextOrder = nextOrder;
   
@@ -30,6 +30,10 @@ class Total(c: Communication,
       */
       if(!initialized) {
         order = totalMsg.order
+        initialized = true
+      }
+      if(totalMsg.order < order){
+        return
       }
       val zippedWithIndex =
         ((msg,totalMsg) :: holdBacks).sortBy(_._2.order) zipWithIndex
@@ -44,7 +48,7 @@ class Total(c: Communication,
       })
       publish(UpdateQueue(this,
           "Total: " + order,
-          holdBacks map (_.toString ) ))
+          consecMap.getOrElse(false, List()) map (p => "" + p._1._1 + " " + p._2) ))
 
     }
     case msg: Message => callback(msg)
@@ -56,7 +60,20 @@ class Total(c: Communication,
     list.map(a => (a._1,a._2+amount))
   }
 
-  def createOrdering() = TotalOrdData( getNextOrder() )
+  def createOrdering() = {
+    val next = getNextOrder()
+    if(! initialized){
+      order = next
+      initialized = true
+    }
+    TotalOrdData(next)
+  }
+  
+  def initialize(order: Int){
+    this.order = order
+    initialized = true
+  }
+  
   def setOrderCallback( callback: () => Int ) = getNextOrder = callback;
 }
 

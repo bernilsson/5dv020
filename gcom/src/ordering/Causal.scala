@@ -31,12 +31,21 @@ class Causal(
   }
 
   private def handle_message(newM: Message, newCm: IsCausal){
-    //If we haven't seen a node before, assume this is the first we get
-    vectorClock = (newCm.clock -- vectorClock.keys) ++ vectorClock
-    
     val from = newM.senders.head
-    // If message is from the past, ignore
+    //If we haven't seen a node before, assume this is the first we get
+    var newVectors = (newCm.clock -- vectorClock.keys)
+    //If this was sent from one of the new ones, decrement so it gets delivered
+    if(newVectors.contains(from)){
+      val clock = newVectors(from) - 1
+      newVectors = newVectors + (from -> clock)
+    }
+    vectorClock = newVectors ++ vectorClock
+    
+    
+    
+  
     var changed = true;
+    // If message is from the past, ignore
     if(vectorClock(from) > newCm.clock(from)){
       changed = false
     } else {
@@ -50,7 +59,7 @@ class Causal(
         if(cm.clock(from) == vectorClock(from) + 1 &&
             earlierByOthers(from,vectorClock,cm.clock)){
             callback(m);
-            holdBacks = holdBacks.filter(_ != m)
+            holdBacks = holdBacks.filter(_ != (m, cm))
             vectorClock = vectorClock + (from -> (vectorClock(from) + 1));
             changed = true
           }
