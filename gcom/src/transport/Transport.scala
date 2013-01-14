@@ -7,7 +7,7 @@ import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
 import java.util.concurrent.{LinkedBlockingQueue}
 import org.slf4j.Logger
-import scala.collection.mutable.HashMap;
+import scala.collection.concurrent.TrieMap
 
 import gcom.common._
 import scala.swing.Publisher
@@ -53,8 +53,8 @@ class BasicTransport(id : NodeID,
   var callback   = callbck;
   val logger     = loggr;
   val queue      = new LinkedBlockingQueue[AbstractMessage]();
-  val registries = new HashMap[(String, Int), Registry]();
-  val stubs      = new HashMap[NodeID, Transport]();
+  val registries = new TrieMap[(String, Int), Registry]();
+  val stubs      = new TrieMap[NodeID, Transport]();
 
   /* If we can't locate registry, dying with an exception is fine. */
   private def locateRegistry(host : String, port : Int) : Registry = {
