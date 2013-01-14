@@ -16,27 +16,27 @@ import gcom.ordering.NonOrdered
 import scala.swing.ListView.Renderer
 
 /**
- * Provides 
+ * Provides
  * top                    : Returns a mainframe with debugging GUI
  * showGroupSelectDialog  : Shows a dialog where the user can select a group
  */
 class DebugGui(
     t: Transport,
-    o: Ordering, 
+    o: Ordering,
     communicator: Communicator,
     com: Communication) extends MainFrame {
 
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
   t match {
-    case x: BasicTransport => listenTo(x) 
+    case x: BasicTransport => listenTo(x)
   }
   listenTo(o)
   communicator.setOnReceive(sendFunction(_))
-  
+
   var messageQueues = Map[Ordering,(String,List[String])]();
   var messageCounter = 0
-  
+
   def showGroupSelectDialog(possibilities: List[Group]): Option[Group] = {
     import Dialog._
     val buttons = new BoxPanel(Orientation.Vertical)
@@ -48,8 +48,8 @@ class DebugGui(
       possibilities, null)
     groupToJoin
   }
-  
-  
+
+
   object chatBox extends TextArea{
     text = "Welcome to chat"
     editable = false;
@@ -73,7 +73,7 @@ class DebugGui(
          );
   }
 
-  
+
     title = "ChatGui"
 
     object dropText extends Label("Delay: ")
@@ -166,7 +166,7 @@ class DebugGui(
       gbc.fill = fill
       add(component,new Constraints(gbc))
     }
- 
+
     }
 
 
@@ -219,6 +219,6 @@ class DebugGui(
       communicator.leaveGroup
       super.closeOperation
     }
-  
+
 
 }

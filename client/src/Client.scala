@@ -164,7 +164,7 @@ object Client {
     val (communicator, transport, comm, ordering) =
           assembleCommunicator(nsrv, leader)
     // Calls communicator's setOnReceive
-    val debugGui = 
+    val debugGui =
       new gcom.client.gui.DebugGui(transport,
                                     ordering,
                                     communicator, comm)
