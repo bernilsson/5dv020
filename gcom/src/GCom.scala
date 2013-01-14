@@ -64,7 +64,4 @@ trait Communicator {
 
   // Increment the shared group counter.
   def incCounter() : Int
-
-  // View callback.
-  def setOnUpdateView(callback : Set[NodeID] => Unit)
 }

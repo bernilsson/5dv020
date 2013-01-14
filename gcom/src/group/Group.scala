@@ -38,8 +38,6 @@ class DummyGroup (grp : Group, lggr : Logger, nsrv : NameServer,
 
   // Boilerplate.
   def setOnReceive(callbck : String => Unit) = { callback = callbck; }
-  def setOnUpdateView(callbck : Set[NodeID] => Unit) =
-  { viewCallback = callbck; }
   def receiveMessage(msg : Message) = {
     msg match {
       case Message(_, _, payload) => callback(payload)
