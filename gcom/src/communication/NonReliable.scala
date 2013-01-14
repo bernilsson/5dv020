@@ -5,9 +5,9 @@ import gcom.transport.Transport;
 
 class NonReliable(t : Transport, callbck : Message => Unit)
                  extends Communication(t, callbck) {
-  
+
   def sendToAll(dsts : Set[NodeID],
-                payload: String, ordering: OrderingData) : List[NodeID] = {
+                payload: String, ordering: OrderingData) : Set[NodeID] = {
     val msg = Message(NoReliabilityData(), ordering, payload)
     sendWithDelay(dsts, msg)
   }

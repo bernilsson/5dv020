@@ -38,6 +38,9 @@ trait Transport extends Remote with Runnable {
   def ping() : Unit;
 
   @throws(classOf[RemoteException])
+  def pingNode(dst : NodeID) : Boolean;
+
+  @throws(classOf[RemoteException])
   def run() : Unit;
 }
 
@@ -110,6 +113,19 @@ class BasicTransport(id : NodeID,
 
   def ping : Unit = { ; }
 
+  def pingNode(dst : NodeID) : Boolean = {
+    try {
+      val mstub = locateStub(dst)
+      mstub.map { stub =>
+        stub.ping(); true;
+      }.getOrElse(false)
+    }
+    catch {
+      case _ : RemoteException => false
+    }
+  }
+
+
   def run() : Unit = {
     while (true) {
       val msg = queue.take();
@@ -130,12 +146,4 @@ object BasicTransport {
     return t;
   }
 
-  def pingTransport(t : Transport) : Boolean = {
-    try {
-      t.ping(); return true;
-    }
-    catch {
-      case _ : RemoteException => return false
-    }
-  }
 }

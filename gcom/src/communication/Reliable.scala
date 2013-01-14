@@ -13,16 +13,16 @@ class Reliable(t : Transport, callbck : Message => Unit,
   var sequences = Map[NodeID,IntMap[Boolean]]();
 
   def sendToAll(dsts : Set[NodeID], payload: String,
-                ordering: OrderingData) : List[NodeID] = {
+                ordering: OrderingData) : Set[NodeID] = {
     var actuallySendTo = dsts
     if(drop){
       actuallySendTo = dsts take 2
     }
-    var retList = List[NodeID]()
-    sendWithDelay(actuallySendTo,
-               Message(ReliableMsgData(localSeq), ordering,payload))
+    val ret =
+      sendWithDelay(actuallySendTo,
+                    Message(ReliableMsgData(localSeq), ordering,payload))
     localSeq += 1
-    return retList
+    return ret
   }
 
   def receiveMessage(msg : Message) = { msg match {

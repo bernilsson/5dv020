@@ -15,7 +15,7 @@ abstract class Ordering (
   val communication = c;
   def setOnReceive(callbck : Message => Unit) = callback = callbck
   def receiveMessage(msg : Message) : Unit
-  def sendToAll(dst: Set[NodeID], payload: String) : Unit = {
+  def sendToAll(dst: Set[NodeID], payload: String) : Set[NodeID] = {
     communication.sendToAll(dst, payload,createOrdering())
   }
   protected def createOrdering() : OrderingData
