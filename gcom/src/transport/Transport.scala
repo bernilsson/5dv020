@@ -43,7 +43,7 @@ trait Transport extends Remote with Runnable {
 
 /** A basic transport layer implementation. */
 class BasicTransport(id : NodeID,
-                     callbck : Message => Unit, loggr : Logger) 
+                     callbck : Message => Unit, loggr : Logger)
                    extends Transport with Publisher
 {
   val nodeID     = id;
