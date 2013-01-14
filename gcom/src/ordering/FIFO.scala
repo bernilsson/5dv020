@@ -4,13 +4,13 @@ import gcom.common._
 import gcom.communication.Communication
 
 
-class FIFO(c: Communication, callbck: Message => Unit)
-      extends Ordering(c, callbck){
+class FIFO(callbck: Message => Unit)
+      extends InternalOrdering(callbck){
 
   private var holdBacks = Map[NodeID,List[(Message, FIFOData)]]();
   private var sequences = Map[NodeID,Int]();
   private var curSeq = 0;
-
+  var view = 0;
   def receiveMessage(msg : Message) {
     msg match {
       case Message(_, fm: FIFOData, _) => handle_message(msg,fm);
@@ -25,6 +25,8 @@ class FIFO(c: Communication, callbck: Message => Unit)
      
   }
 
+
+  
   private def handle_message(newm: Message, newfm: FIFOData){
     val from = newm.senders.head
     if(holdBacks.get(from).isEmpty){
@@ -56,28 +58,22 @@ class FIFO(c: Communication, callbck: Message => Unit)
   }
 
   def createOrdering(): FIFOData = {
-    val msg = FIFOData(curSeq);
+    val msg = FIFOData(curSeq, view);
     curSeq += 1;
     return msg;
   }
 
   def updateView(nodes: Seq[(NodeID, Int)]) = {
-    //Remember messages not yet delivered
-    val newHoldBacks = for (n <- nodes) yield {
-      if(holdBacks.contains(n._1)) { (n._1, holdBacks(n._1)  ) }
-      else                         { (n._1, List() ) }
-    };
-    holdBacks = Map(newHoldBacks: _*);
-
-    sequences = Map(nodes: _*);
+	  val fifo =  FIFO.create(callback)
+	  fifo.view = 
   }
 
   def setOrderCallback( callback: () => Int ) = { ; }
 }
 
 object FIFO{
-  def create(t: Communication, callbck: Message => Unit) : FIFO = {
-    val fifo = new FIFO(t, callbck)
+  def create(callbck: Message => Unit) : FIFO = {
+    val fifo = new FIFO(callbck)
     t.setOnReceive(fifo.receiveMessage)
     fifo
   }

@@ -14,7 +14,7 @@ class CausalTotal(
     thisNode: NodeID,
     nextOrder : () => Int)
   extends
-    Ordering (c: Communication, callbck : Message => Unit) {
+    InternalOrdering (c: Communication, callbck : Message => Unit) {
 
   val total =  Total.create(c, callback, nextOrder)
   val causal = Causal.create(c, {println("causal deliver"); total.receiveMessage(_) }, thisNode)

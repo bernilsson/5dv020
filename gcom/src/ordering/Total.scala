@@ -12,9 +12,8 @@ import gcom.common.UpdateQueue
  * callbck is executed on recieved messages when they are to be delivered
  * nextOrder is run on each createMessage to order the message
  */
-class Total(c: Communication,
-            callbck : Message => Unit, nextOrder : () => Int)
-      extends Ordering(c, callbck) {
+class Total(callbck : Message => Unit, nextOrder : () => Int)
+      extends InternalOrdering(callbck) {
   var order = 0;
   var holdBacks = List[(Message, IsTotal)]();
   private var getNextOrder = nextOrder;
@@ -58,11 +57,8 @@ class Total(c: Communication,
 }
 
 object Total {
-  def create(t : Communication,
-             callbck : Message => Unit, nextOrder : () => Int ) : Total = {
-    val ord = new Total(t, callbck, nextOrder)
-    t.setOnReceive(ord.receiveMessage)
+  def create(callbck : Message => Unit, nextOrder : () => Int ) : Total = {
+    val ord = new Total(callbck, nextOrder)
     return ord
   }
-
 }

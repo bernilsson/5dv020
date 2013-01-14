@@ -1,14 +1,14 @@
 package gcom.group;
 
 import org.slf4j.Logger
-
 import gcom.NameServer
 import gcom.Group
 import gcom.common._
 import gcom.communication.Communication
-import gcom.ordering.Ordering
+import gcom.ordering.InternalOrdering
 import gcom.transport.BasicTransport
 import gcom.Communicator
+import gcom.ordering.Ordering
 
 // Dummy group: Stores all data on the name server.
 
@@ -58,6 +58,8 @@ object DummyGroup {
     comm.setHostCallback(dummy.listGroupMembers)
     ord.setOnReceive(dummy.receiveMessage)
     ord.setOrderCallback(dummy.incCounter)
+    // TODO Call updateView on ordering with correct group
+
     nsrv.joinGroup(ndID)
     return dummy
   }

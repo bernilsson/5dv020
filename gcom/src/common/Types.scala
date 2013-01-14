@@ -21,9 +21,12 @@ object NodeID {
   }
 }
 
-sealed abstract class OrderingData
+sealed abstract class OrderingData extends Serializable{
+  val view: Int
+}
+
 case class NoOrderingData() extends OrderingData
-case class FIFOData(seq: Int) extends OrderingData
+case class FIFOData(seq: Int, view: Int) extends OrderingData
 
 
 trait IsCausal extends OrderingData{
@@ -80,7 +83,7 @@ import scala.swing.event._
 /** name: The name in the left box, header: header in right box, list of
      messages */
 case class UpdateQueue(
-    ordering: gcom.ordering.Ordering,
+    ordering: gcom.ordering.InternalOrdering,
     header: String,
     list: List[String])
   extends Event

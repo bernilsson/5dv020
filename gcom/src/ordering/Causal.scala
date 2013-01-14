@@ -11,7 +11,7 @@ class Causal(
       c: Communication,
       callbck: Message => Unit,
       me: NodeID)
-    extends Ordering(c, callbck){
+    extends InternalOrdering(c, callbck){
 
   private var vectorClock = Map[NodeID,Int]();
   private var holdBacks = List[(Message, IsCausal)]();
