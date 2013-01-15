@@ -58,7 +58,7 @@ class BasicTransport(id : NodeID,
 
   /* If we can't locate registry, dying with an exception is fine. */
   private def locateRegistry(host : String, port : Int) : Registry = {
-    registries.get((nodeID.host, nodeID.port)) match {
+    registries.get((host, port)) match {
       case None => { val registry = LocateRegistry.getRegistry(host, port);
                      registries((host, port)) = registry;
                      return registry;
