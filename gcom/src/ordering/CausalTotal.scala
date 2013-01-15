@@ -30,20 +30,20 @@ class CausalTotal(
   reactions += {
     case x: UpdateQueue => publish(x)
   }
-  
-  override def setOnReceive(callbck: Message => Unit) = 
+
+  override def setOnReceive(callbck: Message => Unit) =
     total.setOnReceive(callbck)
 
   def receiveMessage(msg : Message) = { msg match {
     case Message(_, data : CausalTotalData, _) => {
-      if(!total.initialized){ 
+      if(!total.initialized){
         total.initialize(data.order)
       }
       causal.receiveMessage(msg)
-    } 
+    }
     case msg => callback(msg)
   }
-      
+
   }
 
   override def sendToAll(dsts: Set[NodeID],payload: String) : Set[NodeID] = {

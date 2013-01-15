@@ -183,7 +183,8 @@ class DebugGui(
       // `` lets us match against that specific variable.
       case ListSelectionChanged(`queueList`,range,live) => {
         val key = queueList.listData(queueList.selection.anchorIndex)
-        messageList.listData = messageQueues.getOrElse(key._2, ( "", List() ) )._2
+        messageList.listData = messageQueues.getOrElse(key._2,
+                                                       ( "", List() ) )._2
       }
       case UpdateSentMessages(num) => {
         incCounter()
@@ -202,21 +203,21 @@ class DebugGui(
          case e: NumberFormatException =>
           0
        }
-       
+
        setCounter(0)
        com.setDelay(delay);
        com.setDrop(drop)
        communicator.broadcastMessage(chatInput.text)
     }
-    
+
     def setCounter(i: Int){
       messageCounter = new AtomicInteger(i)
       counter.text = messageCounter.toString + " Messages"
     }
     def incCounter() {
-      counter.text = messageCounter.incrementAndGet() + " Messages" 
-    } 
-    
+      counter.text = messageCounter.incrementAndGet() + " Messages"
+    }
+
     private def updateList() = {
       queueList.listData = messageQueues.map({
         case (ordering, (header,list)) => (header, ordering)

@@ -40,24 +40,24 @@ class Causal(
       newVectors = newVectors + (from -> clock)
     }
     vectorClock = newVectors ++ vectorClock
-    
+
     var changed = true;
     // If message is from the past, ignore
     if(vectorClock(from) > newCm.clock(from)){
       changed = false
     } else {
-      // Make sure outBoundClocks always has the largest numbers 
+      // Make sure outBoundClocks always has the largest numbers
       val newBetterClocks = newCm.clock.map({ case (from, newclock) =>
         val oldClock = outBoundClock.getOrElse(from,0)
         if(oldClock < newclock){
-          from -> newclock  
+          from -> newclock
         } else from -> oldClock
-        
+
       })
       outBoundClock = outBoundClock ++ newBetterClocks
       holdBacks = (newM, newCm) :: holdBacks
     }
-    
+
     while(changed){
       changed = false;
       holdBacks.foreach{ case (m, cm) =>
@@ -73,7 +73,7 @@ class Causal(
       };
     }
   }
- 
+
   private def earlierByOthers(
       from: NodeID,
       myClock: Map[NodeID, Int],
