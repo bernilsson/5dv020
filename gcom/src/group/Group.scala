@@ -120,6 +120,7 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
   var callback     = callbck
   val logger       = lggr
 
+  // TOFIX: Make an Option[GroupState]
   @volatile
   var state : GroupState = null
   var history            = Stack[(Int, GroupStateOp)]()
@@ -211,6 +212,10 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   // 2PC: prepare.
   def consensusPrepare(from : NodeID, num : Int, op : GroupStateOp) : Boolean = {
+    if (state == null)
+      return false;
+    if (num != state.opCounter + 1)
+      return false;
     next2PCAction match {
       case Some(t@(frm, n, o)) => {
         if (t == (from, num, op)) true
@@ -223,6 +228,9 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   // 2PC: commit.
   def consensusCommit(from : NodeID, num : Int, op : GroupStateOp) : Unit = {
+    if (state == null)
+      return;
+
     next2PCAction match {
       case Some(t@(frm, n, o)) => {
         if (t == (from, num, op)) {
@@ -243,6 +251,9 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   // 2PC: abort.
   def consensusAbort(from : NodeID, num : Int, op : GroupStateOp) : Unit = {
+    if (state == null)
+      return;
+
     next2PCAction match {
       case Some(t@(frm, n, o)) => {
         if (t == (from, num, op)) { next2PCAction = None }
