@@ -32,9 +32,9 @@ class FIFOSpec extends FlatSpec {
       })
     val thread        = new Thread(transport);
     thread.start();
-    val a = NodeID.fromString("1:a:1")
-    val b = NodeID.fromString("1:b:1")
-    val c = NodeID.fromString("1:c:1")
+    val a = NodeID.fromString("aaa:a:1")
+    val b = NodeID.fromString("bbb:b:1")
+    val c = NodeID.fromString("ccc:c:1")
 
     // c:1 a:3 a:2 b:1 a:1 b:2 c:2 should result in c:1 b:1 a:1-3 b:2 c:2
     // a -> 0 should be "lost"

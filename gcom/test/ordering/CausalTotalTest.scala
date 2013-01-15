@@ -1,6 +1,6 @@
 package test.ordering
 import java.rmi.registry.LocateRegistry
-import org.scalatest.FlatSpec
+import org.scalatest._
 import org.slf4j.LoggerFactory
 import gcom.common._
 import gcom.transport._
@@ -32,9 +32,9 @@ class CausalTotalSpec extends FlatSpec {
 
     var order = 0;
 
-    val a = NodeID.fromString("1:a:1")
-    val b = NodeID.fromString("1:b:1")
-    val c = NodeID.fromString("1:c:1")
+    val a = NodeID.fromString("aaa:a:1")
+    val b = NodeID.fromString("bbb:b:1")
+    val c = NodeID.fromString("ccc:c:1")
 
 
     val logger        = LoggerFactory.getLogger(id.toString)
@@ -58,7 +58,7 @@ class CausalTotalSpec extends FlatSpec {
         b -> (0,2,2,6),
         c -> (0,0,2,4));
     /*
-    a 100 200         322       
+    a 100 200         322
     b         012 022
     c 001 002
     */
