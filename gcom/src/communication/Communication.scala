@@ -19,7 +19,7 @@ abstract class Communication(t : Transport, callbck : Message => Unit) {
   def setDelay(delay: Long) = this.delay = delay
   def setDrop(drop: Boolean) = this.drop = drop
 
-  protected def sendWithDelay(dsts: Set[NodeID], msg: Message): Set[NodeID] = {
+  protected def sendWithDelay(dsts: Set[NodeID], msg: Message): Unit = {
 
     if(delay == 0) {
       dsts.foreach ({ dst =>
@@ -37,7 +37,7 @@ abstract class Communication(t : Transport, callbck : Message => Unit) {
       }}).start()
 
     }
-    dsts.filter({dst => transport.pingNode(dst)})
+
   }
   /** Change the onReceive callback. */
   def setOnReceive(callbck : Message => Unit) : Unit = callback = callbck

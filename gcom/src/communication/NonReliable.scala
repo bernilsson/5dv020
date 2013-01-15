@@ -9,7 +9,12 @@ class NonReliable(t : Transport, callbck : Message => Unit)
   def sendToAll(dsts : Set[NodeID],
                 payload: String, ordering: OrderingData) : Set[NodeID] = {
     val msg = Message(NoReliabilityData(), ordering, payload)
-    sendWithDelay(dsts, msg)
+    var actuallySendTo = dsts
+    if(drop){
+      actuallySendTo = dsts take 2
+    }
+    sendWithDelay(actuallySendTo, msg)
+    dsts.filter({dst => transport.pingNode(dst)})
   }
 
   def receiveMessage(msg : Message) = callback(msg)
