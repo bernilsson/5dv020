@@ -101,6 +101,17 @@ class DebugGui(
     object nodeList extends ListView[String]{
       listData = communicator.listGroupMembers.map(_.toString).toList
     }
+    listenTo(communicator)
+    reactions += {
+      case UpdateGroupMembers(members) => {
+        nodeList.listData = members.map(_.toString).toList
+      }
+      case AskedToLeave() => {
+        System.exit(0)
+      }
+    }
+
+
 
     object counter extends Label("0 Messages")
 

@@ -3,6 +3,8 @@ package gcom;
 import java.rmi.Remote
 import java.rmi.RemoteException
 
+import scala.swing.Publisher
+
 import gcom.common.NodeID
 
 /** Client interface for the GCom middleware. */
@@ -56,7 +58,7 @@ trait NameServer extends Remote {
   def clearGroups() : Unit
 }
 
-trait Communicator {
+trait Communicator extends Publisher {
   // Send/receive messages.
   def broadcastMessage(msg : String) : Unit
   def setOnReceive(callback : String => Unit)

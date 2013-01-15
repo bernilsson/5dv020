@@ -351,14 +351,14 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
     op match {
       case LeaveGroup(s) => {
-        // TODO: Update UI
+        publish(UpdateGroupMembers(this.listGroupMembers()))
         if (s.contains(nodeID)) {
           state = null
-          // TODO: Kill myself
+          publish(AskedToLeave())
         }
       }
       case JoinGroup(n) => {
-        // TODO: Update UI
+        publish(UpdateGroupMembers(this.listGroupMembers()))
       }
       case _ => ;
     }
