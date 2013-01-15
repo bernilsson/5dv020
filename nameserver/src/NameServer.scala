@@ -60,6 +60,11 @@ object NameServer extends NameServer {
   import scala.collection.concurrent.TrieMap;
   val groups = TrieMap[Group, NodeID]()
 
+  def clearGroups() : Unit = {
+    logger.debug("Nameserver.clearGroups")
+    groups.clear()
+  }
+
   def listGroups() : Set[Group] = {
     logger.debug("Nameserver.listGroups")
     return groups.keySet.toSet

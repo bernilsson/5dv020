@@ -50,6 +50,10 @@ trait NameServer extends Remote {
   /* Used by DummyGroup. */
   @throws(classOf[RemoteException])
   def incCounter() : Int
+
+  /* For tests. */
+  @throws(classOf[RemoteException])
+  def clearGroups() : Unit
 }
 
 trait Communicator {
