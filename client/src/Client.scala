@@ -111,8 +111,8 @@ object Client {
 
     // Sets all the callbacks we've initialised with dummies above.
     val communicator =
-      gcom.group.DummyGroup.create(group, logger, nsrv, nodeID,
-                                   comm, ord, {msg =>}, {view =>})
+      gcom.group.BasicGroup.create(group, logger, nsrv, nodeID,
+                                   comm, ord, {msg =>})
 
     return (communicator, transport, comm, ord)
   }
