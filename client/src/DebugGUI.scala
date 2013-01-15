@@ -107,7 +107,14 @@ class DebugGui(
         nodeList.listData = members.map(_.toString).toList
       }
       case AskedToLeave() => {
-        System.exit(0)
+        val t = new Thread(new Runnable {
+          def run() = {
+            // So that our caller doesn't die with EOF.
+            Thread.sleep(1500)
+            System.exit(0)
+          }
+        })
+        t.start()
       }
     }
 

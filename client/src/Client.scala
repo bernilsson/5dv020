@@ -188,6 +188,7 @@ object Client {
       case Some(leader) => {
         val tuple = assembleCommunicator(nsrv, group)
         tuple._1.killGroup()
+        System.exit(0)
       }
     }
   }

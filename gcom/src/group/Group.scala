@@ -401,8 +401,8 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     state = null
   }
   def killGroup() : Unit = {
-    nameserver.removeGroup(group);
     updateSharedState(LeaveGroup(this.listGroupMembers()))
+    nameserver.removeGroup(group);
     state = null
   }
 
