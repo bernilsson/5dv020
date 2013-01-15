@@ -154,9 +154,11 @@ object Client {
   def commandList(nsrv: NameServer) : Unit = {
     val groups = nsrv.listGroups()
     println("Groups:")
-    groups match {
-      case List() => println("none")
-      case _  => groups.foreach { group => println(group.toString) }
+    if (groups.isEmpty) {
+      println("none")
+    }
+    else{
+      groups.foreach { group => println(group.toString) }
     }
   }
 
