@@ -35,7 +35,7 @@ abstract class Communication(t : Transport, callbck : Message => Unit) {
           })
         }
       }}).start()
-      
+
     }
     dsts.filter({dst => transport.pingNode(dst)})
   }

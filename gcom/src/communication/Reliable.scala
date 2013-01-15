@@ -18,11 +18,11 @@ class Reliable(t : Transport, callbck : Message => Unit,
     if(drop){
       actuallySendTo = dsts take 2
     }
-    val ret =
-      sendWithDelay(actuallySendTo,
-                    Message(ReliableMsgData(localSeq), ordering,payload))
+    sendWithDelay(actuallySendTo,
+                  Message(ReliableMsgData(localSeq), ordering,payload))
     localSeq += 1
-    return ret
+
+    dsts.filter({dst => transport.pingNode(dst)})
   }
 
   def receiveMessage(msg : Message) = { msg match {
