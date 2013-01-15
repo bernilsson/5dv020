@@ -187,6 +187,7 @@ object Client {
       }
       case Some(leader) => {
         val tuple = assembleCommunicator(nsrv, group)
+        logger.debug("Powering up the killing machine...")
         tuple._1.killGroup()
         System.exit(0)
       }
