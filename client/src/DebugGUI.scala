@@ -27,6 +27,8 @@ class DebugGui(
     communicator: Communicator,
     com: Communication) extends MainFrame {
 
+  preferredSize = new Dimension(640,480)
+
   //initialize NameServer
   UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName)
   t match {
