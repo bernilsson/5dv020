@@ -52,8 +52,11 @@ object Client {
     }
   }
 
-  val nameserveropt = parser.parameter[NodeID](
-    "nameserver", "name:host:port", true) { (s, opt) => NodeID.fromString(s) }
+  val nameserveropt = parser.option[NodeID](
+    List("n", "nameserver"),
+    "name:host:port", "node ID of the name server") { (s, opt) =>
+    NodeID.fromString(s)
+  }
 
   sealed abstract class CommandType;
   case class CommandList() extends CommandType;
