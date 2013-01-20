@@ -100,6 +100,19 @@ class DebugGui(
       text = "Send"
     }
 
+    object lockButton extends Button {
+      text = "Lock"
+    }
+
+    listenTo(lockButton)
+    reactions += {
+      case ButtonClicked(`lockButton`) =>
+        lockButton.enabled = false
+        if (!communicator.isLocked())
+          communicator.lockGroup()
+    }
+
+
     object nodeList extends ListView[String]{
       listData = communicator.listGroupMembers.map(_.toString).toList
     }
@@ -108,7 +121,10 @@ class DebugGui(
       case UpdateGroupMembers(members) => {
         nodeList.listData = members.map(_.toString).toList
       }
-      case AskedToLeave() => {
+      case GroupLocked() => {
+        lockButton.enabled = false
+      }
+      case TimeToDie() => {
         val t = new Thread(new Runnable {
           def run() = {
             // So that our caller doesn't die with EOF.
@@ -138,7 +154,8 @@ class DebugGui(
           dropInput,
           dropText,
           delayInput,
-          button);
+          button,
+          lockButton);
     }
 
     contents = new GridBagPanel {
@@ -213,7 +230,7 @@ class DebugGui(
     listenTo(button)
     listenTo(chatInput)
     reactions += {
-      case ButtonClicked(button) => sendMsg()
+      case ButtonClicked(`button`) => sendMsg()
     }
     def sendMsg() = {
        val drop = dropInput.selected;

@@ -70,4 +70,8 @@ trait Communicator extends Publisher {
 
   // Increment the shared group counter.
   def incCounter() : Int
+
+  // Locking the group
+  def lockGroup() : Unit
+  def isLocked() : Boolean
 }

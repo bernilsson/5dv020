@@ -43,6 +43,9 @@ class DummyGroup (grp : Group, lggr : Logger, nsrv : NameServer,
   def killGroup() : Unit = {
     logger.debug("DummyGroup.killGroup: not implemented"); }
 
+  def lockGroup() : Unit = { ; }
+  def isLocked() : Boolean = false
+
   // Boilerplate.
   def setOnReceive(callbck : String => Unit) = { callback = callbck; }
   def receiveMessage(msg : Message) = {
@@ -73,14 +76,16 @@ object DummyGroup {
 // Group state.
 sealed case class GroupState
 (leader : NodeID, members : Map[NodeID, Int],
+ isLocked : Boolean, // Is the group locked?
  msgCounter : Int, // counter for the total order
  opCounter : Int,  // # of the last agreed-upon GroupStateOp
  nodeCounter : Int) // # of the last joined node
 
 /* Group state ops. */
-sealed abstract class GroupStateOp
+sealed abstract class GroupStateOp extends Serializable
 case class JoinGroup(node : NodeID) extends GroupStateOp;
 case class LeaveGroup(nodes : Set[NodeID]) extends GroupStateOp;
+case class LockGroup() extends GroupStateOp;
 case class IncCounter() extends GroupStateOp;
 case class NewLeader(n : NodeID) extends GroupStateOp;
 
@@ -180,14 +185,14 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     val leader = nsrv.getOrSetGroupLeader(grp, ndID)
 
     if (leader == nodeID) {
-      state = new GroupState(nodeID, Map(nodeID -> 0), 0, 0, 0)
+      state = new GroupState(nodeID, Map(nodeID -> 0), false, 0, 0, 0)
     }
     else {
       val stub = locateStub(leader).get
       stub.letMeIn(nodeID) match {
         case None => {
-          logger.debug("They don't let me in! (shouldn't happen)")
-          assert(false)
+          logger.debug("They didn't let me in! (shouldn't happen)")
+          throw new RuntimeException("joinGroup failed!")
         }
         case Some(s) => {
           logger.debug("They let me in! Praise the gods!")
@@ -199,7 +204,7 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   // Let a new node join the group.
   def letMeIn(who : NodeID) : Option[GroupState] = {
-    if (state.members.contains(who)) {
+    if (state == null || state.members.contains(who) || state.isLocked) {
       return None;
     }
     else {
@@ -343,6 +348,11 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     state.synchronized {
     logger.debug("performGroupStateOp( " + num.toString
                  + ", " + op.toString + " )")
+
+    state = state.copy(opCounter = state.opCounter + 1)
+    assert(state.opCounter == num)
+    history.push((num, op))
+
     op match {
       case JoinGroup(node) =>
         { val newNodeCounter = state.nodeCounter + 1
@@ -350,29 +360,37 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
                              nodeCounter = newNodeCounter);
         }
       case LeaveGroup(nodes) =>
-        { state = state.copy(members = state.members -- nodes);
-        }
+        { state = state.copy(members = state.members -- nodes); }
       case IncCounter() => state = state.copy(msgCounter = state.msgCounter + 1);
       case NewLeader(n) => state = state.copy(leader = n);
+      case LockGroup()  => state = state.copy(isLocked = true);
     }
-
-    state = state.copy(opCounter = state.opCounter + 1)
-    assert(state.opCounter == num)
-    history.push((num, op))
+    }
 
     op match {
       case LeaveGroup(s) => {
-        publish(UpdateGroupMembers(this.listGroupMembers()))
-        if (s.contains(nodeID)) {
-          state = null
-          publish(AskedToLeave())
+        if (s.contains(nodeID) || state.isLocked) {
+          if (nodeID == state.leader) {
+            nameserver.removeGroup(group);
+          }
+          publish(TimeToDie())
+
+          state.synchronized {
+            state = null
+          }
+        }
+        else {
+          publish(UpdateGroupMembers(this.listGroupMembers()))
         }
       }
       case JoinGroup(n) => {
+        assert(!state.isLocked)
         publish(UpdateGroupMembers(this.listGroupMembers()))
       }
+      case LockGroup() => {
+        publish(GroupLocked())
+      }
       case _ => ;
-    }
     }
   }
 
@@ -386,25 +404,36 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     val membersSet = this.listGroupMembers()
     val reachable = ordering.sendToAll(membersSet, msg)
     val unreachable = membersSet.diff(reachable);
-    updateSharedState(LeaveGroup(unreachable))
-    if (unreachable.contains(state.leader)) {
+    if (!unreachable.isEmpty) {
+      updateSharedState(LeaveGroup(unreachable))
+    }
+    // State could be null if the group was locked and we're now shutting down.
+    if (state != null && unreachable.contains(state.leader)) {
       electNewLeader(false)
     }
   }
 
   def listGroupMembers() : Set[NodeID] = state.members.keySet
   def leaveGroup() : Unit = {
-    val iWasLeader = if (state.leader == nodeID) true else false
-    if (iWasLeader)
-      electNewLeader(true)
-    updateSharedState(LeaveGroup(Set(nodeID)));
-    state = null
+    if (state != null) {
+      val iWasLeader = if (state.leader == nodeID) true else false
+      if (iWasLeader)
+        electNewLeader(true)
+      updateSharedState(LeaveGroup(Set(nodeID)));
+      state = null
+    }
   }
   def killGroup() : Unit = {
     updateSharedState(LeaveGroup(this.listGroupMembers()))
     nameserver.removeGroup(group);
     state = null
   }
+
+  def lockGroup() : Unit = {
+    updateSharedState(LockGroup())
+  }
+
+  def isLocked() : Boolean = state.isLocked
 
   // Boilerplate.
   def setOnReceive(callbck : String => Unit) = { callback = callbck; }

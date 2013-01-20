@@ -87,5 +87,7 @@ case class UpdateQueue(
 case class UpdateSentMessages(num: Int) extends Event
 /* Sent by the group layer when the group membership is updated. */
 case class UpdateGroupMembers(view : Set[NodeID]) extends Event
-/* Sent by the group layer when we were asked to kill ourselves. */
-case class AskedToLeave() extends Event
+/* Sent by the group layer when it's time for us to kill ourselves. */
+case class TimeToDie() extends Event
+/* Sent by the group layer when the group is locked. */
+case class GroupLocked() extends Event

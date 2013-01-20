@@ -245,4 +245,38 @@ class GroupSpec extends FlatSpec with BeforeAndAfter {
     assert(communicator5.state.leader === node1)
   }
 
+  "Groups" should "be lockable" in {
+    val node1 = new NodeID("node1", host, port)
+    val node2 = new NodeID("node2", host, port)
+    val node3 = new NodeID("node3", host, port)
+    val node4 = new NodeID("node4", host, port)
+
+    val communicator1 =
+      BasicGroup.create(group, logger, nameserver,
+                        node1, communication, ordering, {msg =>})
+    val communicator2 =
+      BasicGroup.create(group, logger, nameserver,
+                        node2, communication, ordering, {msg =>})
+    val communicator3 =
+      BasicGroup.create(group, logger, nameserver,
+                        node3, communication, ordering, {msg =>})
+
+
+    communicator3.lockGroup()
+    assert(communicator1.isLocked())
+    assert(communicator2.isLocked())
+    assert(communicator3.isLocked())
+
+    intercept[RuntimeException] {
+      val communicator4 =
+        BasicGroup.create(group, logger, nameserver,
+                          node4, communication, ordering, {msg =>})
+    }
+
+    communicator3.leaveGroup()
+    assert(communicator1.state === null)
+    assert(communicator2.state === null)
+    assert(communicator3.state === null)
+  }
+
 }
