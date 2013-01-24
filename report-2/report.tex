@@ -217,6 +217,36 @@ server communicates only with the coordinator nodes. The central server is
 obviously a single point of failure, but the groups don't depend on it to
 function and we believe that a central group catalog is needed in any case so
 that new nodes can discover what groups exist in the system.
+\pagebreak
+\subsection{Modules}
+The Communicator is the interface exposed by GCom to the Application layer. On
+its creation the application layer provides the appropriate GCom settings as
+well as a callback to execute when a message is received. 
+
+Each module is connected to the above module through a series of chained
+callbacks, these are displayed as can be seen in figure \ref{fig:modules}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=12cm]{graph2}
+\caption{Overview of the system}
+\label{fig:modules}
+\end{figure}
+
+
+\subsection{Debugger}
+
+The graphical debugging is implemented by using the Publisher/Reactor model in
+the Scala Swing wrapper. Each component extends the Publisher trait so that the
+graphical user interface can listen to that component. When the components have
+something new to push to the interface they publish an event containing that
+specific information. 
+
+\subsection{Limitations}
+
+Messages sent after a node has joined the network but before the node receives
+its first message are discarded by the node as invalid. Before in this context
+means different things for different ordering modules.  
 
 \pagebreak
 
