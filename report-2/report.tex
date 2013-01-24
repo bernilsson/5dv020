@@ -219,16 +219,17 @@ function and we believe that a central group catalog is needed in any case so
 that new nodes can discover what groups exist in the system.
 \pagebreak
 \subsection{Modules}
-The Communicator is the interface exposed by GCom to the Application layer. On
-its creation the application layer provides the appropriate GCom settings as
-well as a callback to execute when a message is received. 
+The Group module of GCom is exposed to the Application layer, but only the 
+methods defined in the Communicator interface. On its creation the application
+layer provides the appropriate GCom settings as well as a callback to execute
+when a message arrives. 
 
 Each module is connected to the above module through a series of chained
 callbacks, these are displayed as can be seen in figure \ref{fig:modules}.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=12cm]{graph2}
+\includegraphics[height=14cm]{graph2}
 \caption{Overview of the system}
 \label{fig:modules}
 \end{figure}
