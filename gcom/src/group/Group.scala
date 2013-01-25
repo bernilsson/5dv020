@@ -272,21 +272,31 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   private def updateSharedState(op : GroupStateOp) : Option[GroupState] = {
     import scala.util.control.Breaks._
+    lggr.debug("Updating shared state with " + op)
 
     var prepared = false
     var committed = false
     while (!committed) {
+      lggr.debug("Startofwhile")
       val newOpCounter = state.opCounter + 1
       val groupMembers = state.members.keySet
 
       breakable {
         for (member <- groupMembers) {
+          lggr.debug("updateSharedState: preparing " + member)
           val mstub = locateStub(member)
           mstub match {
             case Some(stub) => {
-              prepared = stub.consensusPrepare(nodeID, newOpCounter, op)
-              if (!prepared)
-                break;
+              /* If .consensusPrepare is not wrapped in try catch, we block forever
+               * here */  
+              try{
+            	  prepared = stub.consensusPrepare(nodeID, newOpCounter, op)
+            	  if (!prepared)
+            		  break;
+              } catch {
+                case _ : RemoteException => ()
+              }
+              
             }
             case None =>
               logger.debug("updateSharedState: node " + member + "missing.")
@@ -294,9 +304,12 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
         }
       }
       for (member <- groupMembers) {
+        
         val mstub = locateStub(member)
+        lggr.debug("Second for: " + member)
         mstub match {
           case Some(stub) => {
+            lggr.debug("prepared: " + prepared )
             if(prepared)
               stub.consensusCommit(nodeID, newOpCounter, op)
             else
@@ -306,8 +319,13 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
             logger.debug("updateSharedState: node " + member + "missing.")
         }
       }
+      
       if (prepared) committed = true
-      if (!committed) Thread.sleep(500) // hacky
+      if (!committed) {
+       lggr.debug("Could not reach consensus, retrying in 0.5s")
+       Thread.sleep(500) // hacky 
+      }
+      lggr.debug("Out of for: " + prepared + " " + committed )
     }
 
     return Some(state)
@@ -401,12 +419,15 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     return state.msgCounter
   }
   def broadcastMessage(msg : String) : Unit = {
+    lggr.debug("Received new message from application layer")
     val membersSet = this.listGroupMembers()
     val reachable = ordering.sendToAll(membersSet, msg)
     val unreachable = membersSet.diff(reachable);
+    lggr.debug("Following nodes could not be reached" + unreachable)
     if (!unreachable.isEmpty) {
       updateSharedState(LeaveGroup(unreachable))
     }
+    lggr.debug("state is " + state)
     // State could be null if the group was locked and we're now shutting down.
     if (state != null && unreachable.contains(state.leader)) {
       electNewLeader(false)
