@@ -2,8 +2,8 @@
         graph [ dpi = 300 ]; 
  	APPLICATION [shape=record, label = "Application layer"]
  	GROUP       [shape=record, label = "Group Module"];
-	ORDER       [shape=record, label = "{Ordering Module | {FIFO \| Causal \| Total \| CausalTotal}}"];
-	COM         [shape=record, label = "{Communication Module|{Reliable \| Unreliable}}"];
+	ORDER       [shape=record, label = "{Ordering Modules | {FIFO \| Causal \| Total \| CausalTotal}}"];
+	COM         [shape=record, label = "{Communication Modules|{Reliable \| Unreliable}}"];
 	TRANSPORT   [shape=record, label = "Transport Module"];
  	 
 	

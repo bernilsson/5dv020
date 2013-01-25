@@ -224,12 +224,16 @@ methods defined in the Communicator interface. On its creation the application
 layer provides the appropriate GCom settings as well as a callback to execute
 when a message arrives. 
 
-Each module is connected to the above module through a series of chained
-callbacks, these are displayed as can be seen in figure \ref{fig:modules}.
+Each layer in our system hooks into the lower layer by providing a callback 
+to call when a message is ready for the next level. To send a message the 
+application layer calls the sendToAll method on the group module which then 
+passes the message down in the stack. Each module adds the specific information 
+needed as the message passes through. The different layers and modules can 
+be seen in figure \ref{fig:modules}
 
 \begin{figure}[h]
 \centering
-\includegraphics[height=14cm]{graph2}
+\includegraphics[height=12cm]{graph2}
 \caption{Overview of the system}
 \label{fig:modules}
 \end{figure}
@@ -243,11 +247,11 @@ graphical user interface can listen to that component. When the components have
 something new to push to the interface they publish an event containing that
 specific information. 
 
-\subsection{Limitations}
+\section{Limitations}
 
-Messages sent after a node has joined the network but before the node receives
-its first message are discarded by the node as invalid. Before in this context
-means different things for different ordering modules.  
+Messages sent out of order after a node has joined the network can be discarded
+if the first message received by the node is not the first message sent. The
+ordering modules will discard on individual criteria.
 
 \pagebreak
 
