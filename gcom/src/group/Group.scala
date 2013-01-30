@@ -182,7 +182,7 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
   def joinGroup() : Unit = {
     val leader = nsrv.getOrSetGroupLeader(grp, ndID)
     
-    println("" + state + " " + maxNodes)
+    //Decide wether we want a locked group or not
     if (leader == nodeID && maxNodes == 0) {
       state = new GroupState(nodeID, Map(nodeID -> 0), false, 0, 0, 0)
     } else if(leader == nodeID){
@@ -221,18 +221,14 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   // 2PC: prepare.
   def consensusPrepare(from : NodeID, num : Int, op : GroupStateOp) : Boolean = {
-    println("i prepare " + state + " " + op)
     if (state == null){
-      logger.debug("prep: state is null")
       return false;
     }
     if (num != state.opCounter + 1){
-      logger.debug("prep: opCounter is not ready")
       return false;
     }
     val prep = next2PCAction match {
       case Some(t@(frm, n, o)) => {
-        println("i match " + t + " " + from, num, op)
         if (t == (from, num, op)) true
         else { 
           if (!pingNode(frm)) {
@@ -240,14 +236,12 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
             true
           }
           else { 
-            logger.debug("Error"); 
             false 
           }
         }
       }
       case None => { next2PCAction = Some(from, num, op); true }
     }
-    logger.debug("aarg " + prep)
     prep
   }
 
@@ -303,15 +297,11 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
       breakable {
         for (member <- groupMembers) {
-          lggr.debug("updateSharedState: preparing " + member)
           val mstub = locateStub(member)
           // Using try, locateStub does not guarantee stub is alive
           try{
-            println("innan")
         	  prepared = mstub.get.consensusPrepare(nodeID, newOpCounter, op)
-        	  println("efter " + prepared)
         	  if (!prepared) {
-        	    println("innan break: " + prepared)
         	    break; 
         	  }
           } catch {
@@ -348,9 +338,7 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
        lggr.debug("Could not reach consensus, retrying in 0.5s")
        Thread.sleep(500) // hacky 
       }
-      lggr.debug("Out of for: " + prepared + " " + committed )
     }
-    logger.debug("updateSharedState: state: " + state)
     return Some(state)
   }
 
@@ -392,6 +380,7 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     op match {
       case _ : JoinGroup => {
         if( maxNodes != 0 && !state.isLocked ){
+          // TODO create more specific exception
           throw new RuntimeException("You are not allowed to join!")
         }
       }
@@ -409,10 +398,13 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     op match {
       case JoinGroup(node) =>
         { 
-          println("performStateOp: " + maxNodes + " " + state.members.size)
           val newNodeCounter = state.nodeCounter + 1
           state = state.copy(members = state.members + (node -> newNodeCounter),
                              nodeCounter = newNodeCounter);
+          /* If this group is static (maxNodes is bigger than zero) and
+           * we are reaching maximum size, "unlock" the group so sending
+           * can be started.
+           */
           if(maxNodes > 0 && state.members.size == maxNodes){
             assert(state.isLocked == true)
             state = state.copy(isLocked = false)
@@ -464,10 +456,12 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
   }
   def broadcastMessage(msg : String) : Unit = {
     lggr.debug("Received new message from application layer")
+    
     if(state.isLocked){
       lggr.debug("broadCastMessage: Tried to send before ready")
       return //TODO Maybe cache messages, or something
     }
+    
     val membersSet = this.listGroupMembers()
     val reachable = ordering.sendToAll(membersSet, msg)
     val unreachable = membersSet.diff(reachable);
@@ -475,7 +469,6 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     if (!unreachable.isEmpty) {
       updateSharedState(LeaveGroup(unreachable))
     }
-    lggr.debug("state is " + state)
     // State could be null if the group was locked and we're now shutting down.
     if (state != null && unreachable.contains(state.leader)) {
       electNewLeader(false)
