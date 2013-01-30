@@ -95,7 +95,7 @@ class DebugGui(
       listData = List("Messages are to be displayed here")
     }
 
-    println("\n\n\n" + communicator.isLocked+ "\n")
+
     object button extends Button {
       text = "Send"
       enabled = !communicator.isLocked

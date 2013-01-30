@@ -245,7 +245,6 @@ class GroupSpec extends FlatSpec with BeforeAndAfter {
     assert(communicator4.state.leader === node1)
     assert(communicator5.state.leader === node1)
   }
-  // TODO Fix test
 
   "Groups" should "be lockable" in {
     val node1 = new NodeID("nd1", host, port)

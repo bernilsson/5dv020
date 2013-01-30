@@ -5,16 +5,18 @@ import java.rmi.RemoteException
 import java.rmi.registry.LocateRegistry
 import java.rmi.registry.Registry
 import java.rmi.server.UnicastRemoteObject
+
 import org.slf4j.Logger
+
 import scala.collection.mutable.Stack
 import scala.collection.concurrent.TrieMap
+
 import gcom.NameServer
 import gcom.Group
 import gcom.common._
 import gcom.communication.Communication
 import gcom.ordering.Ordering
 import gcom.Communicator
-import java.rmi.ServerError
 
 // Dummy group: Stores all data on the name server.
 
@@ -41,7 +43,6 @@ class DummyGroup (grp : Group, lggr : Logger, nsrv : NameServer,
   def killGroup() : Unit = {
     logger.debug("DummyGroup.killGroup: not implemented"); }
 
-  def lockGroup() : Unit = { ; }
   def isLocked() : Boolean = false
 
   // Boilerplate.
@@ -178,11 +179,11 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     }
   }
 
-  // Initialisation.
+  // Initialization.
   def joinGroup() : Unit = {
     val leader = nsrv.getOrSetGroupLeader(grp, ndID)
     
-    //Decide wether we want a locked group or not
+    //Decide whether this should be a locked group or not
     if (leader == nodeID && maxNodes == 0) {
       state = new GroupState(nodeID, Map(nodeID -> 0), false, 0, 0, 0)
     } else if(leader == nodeID){
@@ -221,28 +222,18 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
 
   // 2PC: prepare.
   def consensusPrepare(from : NodeID, num : Int, op : GroupStateOp) : Boolean = {
-    if (state == null){
+    if (state == null)
       return false;
-    }
-    if (num != state.opCounter + 1){
+    if (num != state.opCounter + 1)
       return false;
-    }
-    val prep = next2PCAction match {
+    next2PCAction match {
       case Some(t@(frm, n, o)) => {
         if (t == (from, num, op)) true
-        else { 
-          if (!pingNode(frm)) {
-            next2PCAction = Some(from, num, op);
-            true
-          }
-          else { 
-            false 
-          }
-        }
+        else { if (!pingNode(frm)) { next2PCAction = Some(from, num, op); true}
+               else { false } }
       }
       case None => { next2PCAction = Some(from, num, op); true }
     }
-    prep
   }
 
   // 2PC: commit.
@@ -291,7 +282,6 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     var prepared = false
     var committed = false
     while (!committed) {
-      lggr.debug("Startofwhile")
       val newOpCounter = state.opCounter + 1
       val groupMembers = state.members.keySet
 
@@ -312,9 +302,7 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
           }
         }
       }
-      logger.debug("updateSharedState: prepared: " + prepared)
       for (member <- groupMembers) {
-        logger.debug("updateSharedState: commit/abort node: " + member)
         val mstub = locateStub(member)
         try{
           val stub = mstub.get
@@ -391,14 +379,12 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
                  + ", " + op.toString + " )")
 
     state = state.copy(opCounter = state.opCounter + 1)
-    logger.debug("This should be true " + (state.opCounter == num))
     assert(state.opCounter == num)
     history.push((num, op))
 
     op match {
       case JoinGroup(node) =>
-        { 
-          val newNodeCounter = state.nodeCounter + 1
+        { val newNodeCounter = state.nodeCounter + 1
           state = state.copy(members = state.members + (node -> newNodeCounter),
                              nodeCounter = newNodeCounter);
           /* If this group is static (maxNodes is bigger than zero) and
@@ -489,10 +475,6 @@ class BasicGroup (grp: Group, lggr : Logger, nsrv : NameServer,
     updateSharedState(LeaveGroup(this.listGroupMembers()))
     nameserver.removeGroup(group);
     state = null
-  }
-
-  def unlockGroup() : Unit = {
-    updateSharedState(UnlockGroup())
   }
 
   def isLocked() : Boolean = state.isLocked
